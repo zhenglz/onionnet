@@ -184,8 +184,6 @@ if __name__ == "__main__":
             inputs_list.append(inputs[int(i*aver_size):int((i+1)*aver_size)])
         inputs_list.append(inputs[(size-1)*aver_size:])
 
-        #print(inputs_list)
-
     else:
         inputs_list = None
 
