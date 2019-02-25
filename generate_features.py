@@ -66,6 +66,21 @@ class AtomTypeCounts(object):
         self.counts_ = np.array([])
 
     def parsePDB(self, rec_sele="protein", lig_sele="resname LIG"):
+        """
+        Parse PDB file using mdtraj
+
+        Parameters
+        ----------
+        rec_sele: str, default is protein.
+            The topology selection for the receptor
+        lig_sele: str, default is resname LIG
+            The topology selection for the ligand
+
+        Returns
+        -------
+        self: an instance of itself
+
+        """
 
         top = self.pdb.topology
 
@@ -82,12 +97,20 @@ class AtomTypeCounts(object):
         return self
 
     def distance_pairs(self):
+        """Calculate all distance pairs between atoms in the receptor and in the ligand
+
+        Returns
+        -------
+        self: an instance of itself
+        """
 
         if not self.pdb_parsed_:
             self.parsePDB()
 
+        # all combinations of the atom indices from the receptor and the ligand
         all_pairs = itertools.product(self.receptor_indices, self.ligand_indices)
 
+        # if distance matrix is not calculated
         if not self.distance_computed_:
             self.distance_matrix_ = mt.compute_distances(self.pdb, atom_pairs=all_pairs)[0]
 
@@ -96,7 +119,19 @@ class AtomTypeCounts(object):
         return self
 
     def cutoff_count(self, cutoff=0.35):
+        """
+        Get the atom contact matrix
 
+        Parameters
+        ----------
+        cutoff: float, default is 0.35 angstrom
+            The distance cuntoff for the contacts
+
+        Returns
+        -------
+        self: return an instance of itself
+        """
+        # get the inter-molecular atom contacts
         self.counts_ = (self.distance_matrix_ <= cutoff) * 1.0
 
         return self
@@ -125,21 +160,20 @@ def generate_features(complex_fn, lig_code, ncutoffs):
         else:
             new_rec.append(e)
 
+    # the element-type combinations for all atom-atom pairs
     rec_lig_element_combines = ["_".join(x) for x in list(itertools.product(new_rec, new_lig))]
     cplx.distance_pairs()
 
     counts = []
-
     onion_counts = []
 
+    # calculate all contacts for all shells
     for i, cutoff in enumerate(ncutoffs):
         cplx.cutoff_count(cutoff)
-
         if i == 0:
             onion_counts.append(cplx.counts_)
         else:
             onion_counts.append(cplx.counts_ - counts[-1])
-
         counts.append(cplx.counts_)
 
     results = []
@@ -148,6 +182,7 @@ def generate_features(complex_fn, lig_code, ncutoffs):
         #count_dict = dict.fromkeys(keys, 0.0)
         d = OrderedDict()
         d = d.fromkeys(keys, 0.0)
+        # now sort the atom-pairs and accumulate the element-type to a dict
         for e_e, c in zip(rec_lig_element_combines, onion_counts[n]):
             d[e_e] += c
 
