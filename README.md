@@ -8,15 +8,22 @@ A multiple-layer inter-molecular contact features based deep neural network for 
 Necessary packages should be installed to run the OnionNet model.
 
 Dependecies:
-    python = 3.6
-    numpy = 
-    scipy = 
-    pandas = 
+
+    python 
+    numpy  
+    scipy  
+    pandas 
     scikit-learn
     mpi4py
     mdtraj 
     tensorflow
-    
+
+
+To install necessary environment, create a new env with conda commands
+   
+    conda env create -f onionnet_environment.yml 
+    source activate onionnet
+    # do something yourself
 
 # Usage
 ## 1. Prepare the protein-ligand complexes (3D structures) in pdb format
