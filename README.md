@@ -1,7 +1,15 @@
 # OnionNet
-A multiple-layer inter-molecular contact features based deep neural network for protein-ligand binding affinity prediction
+A multiple-layer inter-molecular contact based deep neural network for protein-ligand binding affinity prediction. The testing set is CASF-2013 benchmark. The protein-ligand binding affinity is directly predicted.
+
+The model could be applied for re-scoring the AutoDock Vina results.
+
+# Contact
+Yuguang Mu, Nanyang Technological University, ygmu_AT_ntu.edu.sg
+Liangzhen Zheng, Nanyang Technological University, lzheng002_AT_e.ntu.edu.sg
+
 
 # Citation
+Coming soon ... ...
 
 
 # Installation
