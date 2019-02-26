@@ -102,8 +102,8 @@ def remove_shell_features(dat, shell_index, features_n=64):
 if __name__ == "__main__":
 
     # Scale dataset
-    if os.path.exists("standard_scaler.model"):
-        scaler = joblib.load("standard_scaler.model")
+    if os.path.exists("StandardScaler_OnionNet.model"):
+        scaler = joblib.load("StandardScaler_OnionNet.model")
     else:
         print("Please put standard_scaler.model in your working directory.")
         sys.exit(0)

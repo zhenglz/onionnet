@@ -49,8 +49,8 @@ def remove_features_HFree(df, shell_index=0):
 
 
 # Scale dataset
-if os.path.exists("standard_scaler.model"):
-    scaler = joblib.load("standard_scaler.model")
+if os.path.exists("StandardScaler_OnionNet_HFree.model"):
+    scaler = joblib.load("StandardScaler_OnionNet_HFree.model")
 else:
     print("Please put standard_scaler.model in your working directory.")
     sys.exit(0)
