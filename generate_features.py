@@ -7,6 +7,8 @@ import itertools
 import sys
 from collections import OrderedDict
 from mpi4py import MPI
+import argparse
+from argparse import RawTextHelpFormatter
 
 
 class AtomTypeCounts(object):
@@ -142,23 +144,13 @@ def generate_features(complex_fn, lig_code, ncutoffs):
     all_elements = ["H", "C", "O", "N", "P", "S", "Br", "Du"]
     keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
 
+    # parse the pdb file and get the atom element information
     cplx = AtomTypeCounts(complex_fn, lig_code)
     cplx.parsePDB(rec_sele="protein", lig_sele="resname %s" % lig_code)
 
-    lig = cplx.lig_ele
-    rec = cplx.rec_ele
-
-    new_lig, new_rec = [], []
-    for e in lig:
-        if e not in all_elements:
-            new_lig.append("Du")
-        else:
-            new_lig.append(e)
-    for e in rec:
-        if e not in all_elements:
-            new_rec.append("Du")
-        else:
-            new_rec.append(e)
+    # element types of all atoms in the proteins and ligands
+    new_lig = [x if x in all_elements else "Du" for x in cplx.lig_ele]
+    new_rec = [x if x in all_elements else "Du" for x in cplx.rec_ele]
 
     # the element-type combinations for all atom-atom pairs
     rec_lig_element_combines = ["_".join(x) for x in list(itertools.product(new_rec, new_lig))]
@@ -193,22 +185,35 @@ def generate_features(complex_fn, lig_code, ncutoffs):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-        print("Usage: \npyhon generate_features.py input_complexes_list output_features.csv ")
-        sys.exit(0)
-
     print("Start Now ... ")
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    # spreading the calculating list to different MPI ranks
+    d = """
+    """
+
+    parser = argparse.ArgumentParser(description=d)
+    parser.add_argument("-inp", type=str, default="input.dat",
+                        help="Input. The input file containg the file path of each \n"
+                             "of the protein-ligand complexes files (in pdb format.)\n"
+                             "There should be two columns (separated by space) in\n"
+                             "the input file, the first col is the file path, the \n"
+                             "2nd col is the ligand code. \n")
+    parser.add_argument("-out", type=str, default="output.csv",
+                        help="Output. Default is output.csv \n"
+                             "The output file name containing the features, each sample\n"
+                             "per row. ")
+
+    args = parser.parse_args()
+
     if rank == 0:
         if len(sys.argv) < 3:
-            print("Usage: python gen_feature.py input.dat output.csv ")
+            parser.print_help()
             sys.exit(0)
 
-        with open(sys.argv[1]) as lines:
+        # spreading the calculating list to different MPI ranks
+        with open(sys.argv.inp) as lines:
             lines = [x for x in lines if ("#" not in x and len(x.split()) >= 2)].copy()
             inputs = [x.split()[0] for x in lines]
 
@@ -223,16 +228,13 @@ if __name__ == "__main__":
         inputs_list = None
 
     inputs = comm.scatter(inputs_list, root=0)
-    
-    # defining output file name ...
-    out = sys.argv[2]
 
     # defining the shell structures ... (do not change) 
-    n_cutoffs = np.linspace(0.1, 3.1, 60)
+    n_cutoffs = np.linspace(0.1, 3.05, 60)
 
     results = []
     ele_pairs =[]
-    success = []
+    #success = []
 
     # computing the features now ...
     for p in inputs:
@@ -243,14 +245,14 @@ if __name__ == "__main__":
             # the main function for featurization ...
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
             results.append(r)
-            success.append(1.)
+            #success.append(1.)
             print(rank, fn)
 
         except:
             #r = results[-1]
             r = ['fn', ] + list([0., ]*3840) + [0.0, ]
             results.append(r)
-            success.append(0.)
+            #success.append(0.)
             print("Not successful. ", fn)
 
     # saving features to a file now ... 
@@ -264,7 +266,7 @@ if __name__ == "__main__":
     for i, n in enumerate(ele_pairs * len(n_cutoffs)):
         col_n.append(n+"_"+str(i))
     df.columns = col_n
-    df.to_csv(str(rank)+"_"+out, sep=",", float_format="%.1f", index=True)
+    df.to_csv(args.out, sep=",", float_format="%.1f", index=True)
 
     print(rank, "Complete calculations. ")
 

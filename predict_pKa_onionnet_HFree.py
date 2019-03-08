@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
-from sklearn import preprocessing
 import tensorflow as tf
 from scipy import stats
-import itertools
 from sklearn.externals import joblib
-
+import argparse
+from argparse import RawTextHelpFormatter
 import os, sys
 
 
@@ -48,33 +47,72 @@ def remove_features_HFree(df, shell_index=0):
     return kf
 
 
-# Scale dataset
-if os.path.exists("StandardScaler_OnionNet_HFree.model"):
-    scaler = joblib.load("StandardScaler_OnionNet_HFree.model")
-else:
-    print("Please put standard_scaler.model in your working directory.")
-    sys.exit(0)
+if __name__ == "__main__":
 
-input_shape = (-1, 49, 59, 1)
+    d = """
+    Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
+    Citation: Coming soon ... ...
+    Author: Liangzhen Zheng
 
-# load dataset
-X_topred = pd.read_csv(sys.argv[2], sep=",", header=0, index_col=0)
-kf = remove_features_HFree(X_topred, 0)
+    Examples:
+    Show help information
+    python predict_pKa.py -h
 
-# scale dataset
-Xscale = scaler.transform(X_topred[kf]).reshape(input_shape)
+    Predict pKa
+    python predict_pKa.py -inp features_300samples.csv -out predicted_pKa_300samples.csv \
+                          -scaler Standard_Scaler_OnionNet.model \
+                          -model OnionNet_Shell0Missing.h5
 
-# load model
-model = tf.keras.models.load_model(sys.argv[1])
+    """
 
-# predict pKa
-ypred = model.predict(Xscale)
-ypred = np.ravel(ypred)
+    parser = argparse.ArgumentParser(description=d, formatter_class=RawTextHelpFormatter)
+    parser.add_argument("-inp", type=str, default="features.csv",
+                        help="Input. The input file containing the features for the protein-ligand\n"
+                             "complexes, one sample per row. This file should be comma separated format\n"
+                             "with file header (the first row). ")
+    parser.add_argument("-out", type=str, default="predicted_pKa.csv",
+                        help="Output. Default is predicted_pKa.csv \n"
+                             "The output file name containing the predicted pKa values.")
+    parser.add_argument("-scaler", type=str, default="Standard_scaler.model",
+                        helpp="Input. Default is Standard_scaler.model \n"
+                              "The standard scaler for feature normalization. \n")
+    parser.add_argument("-model", type=str, default="OnionNet.h5",
+                        help="Input. Default is OnionNet.h5 \n"
+                             "The pre-trained DNN OnionNet model for pKa prediction. \n")
 
-# save prediction to a file
-df = pd.DataFrame()
-df["PDBID"] = X_topred.index.values
-df["pKa_predict"] = ypred
+    args = parser.parse_args()
 
-df.to_csv("predicted_HFree_" + sys.argv[2], sep=",", header=True, index=True, float_format="%.3f")
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(0)
+
+    # Scale dataset
+    if os.path.exists(args.scaler):
+        scaler = joblib.load(args.scaler)
+    else:
+        print("Please put standardscaler model %s in your working directory." % args.scaler)
+        sys.exit(0)
+
+    input_shape = (-1, 49, 59, 1)
+
+    # load dataset
+    X_topred = pd.read_csv(args.inp, sep=",", header=0, index_col=0)
+    kf = remove_features_HFree(X_topred, 0)
+
+    # scale dataset
+    Xscale = scaler.transform(X_topred[kf]).reshape(input_shape)
+
+    # load model
+    model = tf.keras.models.load_model(args.model)
+
+    # predict pKa
+    ypred = model.predict(Xscale)
+    ypred = np.ravel(ypred)
+
+    # save prediction to a file
+    df = pd.DataFrame()
+    df["PDBID"] = X_topred.index.values
+    df["pKa_predict"] = ypred
+
+    df.to_csv(args.out, sep=",", header=True, index=True, float_format="%.3f")
 
