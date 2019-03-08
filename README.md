@@ -3,6 +3,8 @@ A multiple-layer inter-molecular contact based deep neural network for protein-l
 
 The model could be applied for re-scoring the AutoDock Vina results.
 
+<img src="./datasets/TOC_OnionNet.png" alt="DNN aided protein-ligand binding affinity prediction and docking rescoring">
+
 # Contact
 Yuguang Mu, Nanyang Technological University, ygmu_AT_ntu.edu.sg
 Liangzhen Zheng, Nanyang Technological University, lzheng002_AT_e.ntu.edu.sg
@@ -44,15 +46,16 @@ path of the protein-ligand complex file.
 ## 2. Generate multiple-layer inter-molecular contact features
 Using the "generate_features.py" script to generate the features for OnionNet predictions.
  
-
+    python predict_pKa_HFree.py
     python generate_features.py input_complexes.dat output_features.py
     # or run the script with MPI
-    mpirun -np 4 python generate_features.py input_complexes.dat output_features.py 
+    mpirun -np 4 python generate_features.py -inp input_complexes.dat -out output_features.py 
 
 ## 3. Predict the pKa of the complexes
 Given a dataset containing the multiple-layer inter-molecular contact features, we could predict
 the binding affinities (in pKa scale). 
-        
-    python predict_pKa_HFree.py OnionNet_HFree.h5 output_predicted_pKa.csv
+
+    python predict_pKa_HFree.py -h
+    python predict_pKa_HFree.py -model OnionNet_HFree.h5 -scaler StandardScaler_OnionNet.model -inp features.csv -out output_predicted_pKa.csv
 
 
