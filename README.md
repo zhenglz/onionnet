@@ -19,7 +19,7 @@ Necessary packages should be installed to run the OnionNet model.
 
 Dependecies:
 
-    python 
+    python >= 3.6
     numpy  
     scipy  
     pandas 
@@ -31,9 +31,17 @@ Dependecies:
 
 To install necessary environment, create a new env with conda commands
    
+    # download the package and then enter the folder
+    git clone https://github.com/zhenglz/onionnet.git
+    cd onionnet
+
+    # create a new pearsonal conda environment
     conda env create -f onionnet_environment.yml 
-    source activate onionnet
-    # do something yourself
+    conda activate onionnet
+    
+    # do some tests now
+    python generate_features.py -h
+
 
 # Usage
 ## 1. Prepare the protein-ligand complexes (3D structures) in pdb format
@@ -46,9 +54,10 @@ path of the protein-ligand complex file.
 ## 2. Generate multiple-layer inter-molecular contact features
 Using the "generate_features.py" script to generate the features for OnionNet predictions.
  
-    python predict_pKa_HFree.py
-    python generate_features.py input_complexes.dat output_features.py
-    # or run the script with MPI
+    python generate_features.py -h
+    python generate_features.py -inp input_complexes.dat -out output_features.csv
+
+    # or run the script with MPI, cpu 4 cores
     mpirun -np 4 python generate_features.py -inp input_complexes.dat -out output_features.py 
 
 ## 3. Predict the pKa of the complexes
