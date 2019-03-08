@@ -191,19 +191,40 @@ if __name__ == "__main__":
     size = comm.Get_size()
 
     d = """
+    Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
+    Citation: Coming soon ... ...
+    Author: Liangzhen Zheng
+    
+    This script is used to generate inter-molecular element-type specific 
+    contact features. Installation instructions should be refered to 
+    https://github.com/zhenglz/onionnet
+
+    Examples:
+    Show help information
+    python generate_features.py -h
+    
+    Run the script with one CPU core
+    python generate_features.py -inp input_samples.dat -out features_samples.csv
+    
+    Run the script with MPI 
+    mpirun -np 16 python generate_features.py -inp input_samples.dat -out features_samples.csv
+    
     """
 
     parser = argparse.ArgumentParser(description=d)
     parser.add_argument("-inp", type=str, default="input.dat",
                         help="Input. The input file containg the file path of each \n"
                              "of the protein-ligand complexes files (in pdb format.)\n"
-                             "There should be two columns (separated by space) in\n"
-                             "the input file, the first col is the file path, the \n"
-                             "2nd col is the ligand code. \n")
+                             "There should be only 1 column, each row or line containing\n"
+                             "the input file path, relative or absolute path.")
     parser.add_argument("-out", type=str, default="output.csv",
                         help="Output. Default is output.csv \n"
                              "The output file name containing the features, each sample\n"
                              "per row. ")
+    parser.add_argument("lig", type=str, default="LIG",
+                        help="Input, optional. Default is LIG. \n"
+                             "The ligand molecule residue name (code, 3 characters) in the \n"
+                             "complex pdb file. ")
 
     args = parser.parse_args()
 
@@ -239,7 +260,7 @@ if __name__ == "__main__":
     # computing the features now ...
     for p in inputs:
         fn = p
-        lig_code = "LIG UNK"
+        lig_code = args.lig
 
         try:
             # the main function for featurization ...
@@ -266,7 +287,7 @@ if __name__ == "__main__":
     for i, n in enumerate(ele_pairs * len(n_cutoffs)):
         col_n.append(n+"_"+str(i))
     df.columns = col_n
-    df.to_csv(args.out, sep=",", float_format="%.1f", index=True)
+    df.to_csv("rank%d_"%rank+args.out, sep=",", float_format="%.1f", index=True)
 
     print(rank, "Complete calculations. ")
 

@@ -53,6 +53,9 @@ if __name__ == "__main__":
     Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
     Citation: Coming soon ... ...
     Author: Liangzhen Zheng
+    
+    Installation instructions should be refered to 
+    https://github.com/zhenglz/onionnet
 
     Examples:
     Show help information

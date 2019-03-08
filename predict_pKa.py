@@ -108,6 +108,9 @@ if __name__ == "__main__":
     Citation: Coming soon ... ...
     Author: Liangzhen Zheng
     
+    Installation instructions should be refered to 
+    https://github.com/zhenglz/onionnet
+    
     Examples:
     Show help information
     python predict_pKa.py -h
