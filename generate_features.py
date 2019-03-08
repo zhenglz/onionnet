@@ -8,7 +8,7 @@ import sys
 from collections import OrderedDict
 from mpi4py import MPI
 import argparse
-from argparse import RawTextHelpFormatter
+from argparse import RawDescriptionHelpFormatter
 
 
 class AtomTypeCounts(object):
@@ -67,7 +67,7 @@ class AtomTypeCounts(object):
         self.distance_matrix_ = np.array([])
         self.counts_ = np.array([])
 
-    def parsePDB(self, rec_sele="protein", lig_sele="resname LIG"):
+    def parsePDB(self, rec_sele="protein", lig_sele="LIG"):
         """
         Parse PDB file using mdtraj
 
@@ -87,7 +87,7 @@ class AtomTypeCounts(object):
         top = self.pdb.topology
 
         self.receptor_indices = top.select(rec_sele)
-        self.ligand_indices = top.select(lig_sele)
+        self.ligand_indices = top.select("resname "+lig_sele)
 
         table, bond = top.to_dataframe()
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     
     """
 
-    parser = argparse.ArgumentParser(description=d)
+    parser = argparse.ArgumentParser(description=d, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-inp", type=str, default="input.dat",
                         help="Input. The input file containg the file path of each \n"
                              "of the protein-ligand complexes files (in pdb format.)\n"
@@ -221,7 +221,7 @@ if __name__ == "__main__":
                         help="Output. Default is output.csv \n"
                              "The output file name containing the features, each sample\n"
                              "per row. ")
-    parser.add_argument("lig", type=str, default="LIG",
+    parser.add_argument("-lig", type=str, default="LIG",
                         help="Input, optional. Default is LIG. \n"
                              "The ligand molecule residue name (code, 3 characters) in the \n"
                              "complex pdb file. ")
