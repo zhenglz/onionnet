@@ -228,13 +228,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    all_elements = ["H", "C", "O", "N", "P", "S", "Br", "Du"]
+    keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
+
     if rank == 0:
         if len(sys.argv) < 3:
             parser.print_help()
             sys.exit(0)
 
         # spreading the calculating list to different MPI ranks
-        with open(sys.argv.inp) as lines:
+        with open(args.inp) as lines:
             lines = [x for x in lines if ("#" not in x and len(x.split()) >= 2)].copy()
             inputs = [x.split()[0] for x in lines]
 
@@ -284,7 +287,7 @@ if __name__ == "__main__":
         df.index = np.arange(df.shape[0])
 
     col_n = []
-    for i, n in enumerate(ele_pairs * len(n_cutoffs)):
+    for i, n in enumerate(keys * len(n_cutoffs)):
         col_n.append(n+"_"+str(i))
     df.columns = col_n
     df.to_csv("rank%d_"%rank+args.out, sep=",", float_format="%.1f", index=True)

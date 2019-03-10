@@ -45,11 +45,12 @@ To install necessary environment, create a new env with conda commands
 
 # Usage
 ## 1. Prepare the protein-ligand complexes (3D structures) in pdb format
-a. The protein-ligand complexes from experimental crystal or NMR structures, or from molecular
-docking, are accepted.
-b. Make sure that the residue name of the ligands is the same, preferable "LIG" or "UNK".
-c. Generate an file containing the complexes, one complex per line. Each line contains the 
-path of the protein-ligand complex file.
+    
+    a. The protein-ligand complexes from experimental crystal or NMR structures, or from molecular
+       docking, are accepted.
+    b. Make sure that the residue name of the ligands is the same, preferable "LIG" or "UNK".
+    c. Generate an file containing the complexes, one complex per line. Each line contains the 
+       path of the protein-ligand complex file.
 
 ## 2. Generate multiple-layer inter-molecular contact features
 Using the "generate_features.py" script to generate the features for OnionNet predictions.

@@ -130,7 +130,7 @@ if __name__ == "__main__":
                         help="Output. Default is predicted_pKa.csv \n"
                              "The output file name containing the predicted pKa values.")
     parser.add_argument("-scaler", type=str, default="Standard_scaler.model",
-                        helpp="Input. Default is Standard_scaler.model \n"
+                        help="Input. Default is Standard_scaler.model \n"
                               "The standard scaler for feature normalization. \n")
     parser.add_argument("-model", type=str, default="OnionNet.h5",
                         help="Input. Default is OnionNet.h5 \n"
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     Xpred = remove_shell_features(Xpred_scaled, n, 64).reshape((-1, 64, 60, 1))
 
     # load the OnionNet Model
-    model = tf.keras.models.load_model(sys.argv[1],
+    model = tf.keras.models.load_model(args.model,
                                        custom_objects={'RMSE': RMSE,
                                                        'pcc': PCC,
                                                        'PCC': PCC,
@@ -176,6 +176,9 @@ if __name__ == "__main__":
     # save output into a file
     y_pred = pd.DataFrame()
     y_pred["ID"] = to_predict.index
-    y_pred["pKa_pred"] = model.predict(Xpred)
+    y_pred["pKa_pred"] = model.predict(Xpred).ravel()
     y_pred.to_csv(args.out, sep=",", float_format="%.3f", header=True, index=False)
 
+    if "pKa" in to_predict.columns.values:
+        print("PCC : %.3f" % pcc(y_pred['pKa_pred'].values, to_predict.pKa.values))
+        print("RMSE: %.3f" % rmse(y_pred['pKa_pred'].values, to_predict.pKa.values))
