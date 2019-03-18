@@ -63,6 +63,18 @@ Using the "generate_features.py" script to generate the features for OnionNet pr
     # or run the script with MPI, cpu 4 cores
     mpirun -np 4 python generate_features.py -inp input_complexes.dat -out output_features.py 
 
+The input file contatins the absolute or relative pathes of the protein-ligand complexes pdb files.
+The content of the "input_complexes.dat" file could be:
+ 
+  ./10gs/10gs_complex.pdb
+  ./1a28/1a28_complex.pdb
+
+Or:
+  
+  /home/liangzhen/PDBBind_v2018/10gs/10gs_dockingpose.pdb
+  /home/liangzhen/PDBBind_v2018/1a28/1a28_dockingpose.pdb
+
+
 ### 3. Predict the pKa of the complexes
 Given a dataset containing the multiple-layer inter-molecular contact features, we could predict
 the binding affinities (in pKa scale). 
