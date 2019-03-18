@@ -77,7 +77,7 @@ if __name__ == "__main__":
                         help="Output. Default is predicted_pKa.csv \n"
                              "The output file name containing the predicted pKa values.")
     parser.add_argument("-scaler", type=str, default="Standard_scaler.model",
-                        helpp="Input. Default is Standard_scaler.model \n"
+                        help="Input. Default is Standard_scaler.model \n"
                               "The standard scaler for feature normalization. \n")
     parser.add_argument("-model", type=str, default="OnionNet.h5",
                         help="Input. Default is OnionNet.h5 \n"
@@ -103,7 +103,8 @@ if __name__ == "__main__":
     kf = remove_features_HFree(X_topred, 0)
 
     # scale dataset
-    Xscale = scaler.transform(X_topred[kf]).reshape(input_shape)
+    Xs = scaler.transform(X_topred)#.reshape(input_shape)
+    Xscale = pd.DataFrame(Xs, columns=X_topred.columns)[kf].values.reshape(input_shape)
 
     # load model
     model = tf.keras.models.load_model(args.model)

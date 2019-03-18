@@ -5,16 +5,17 @@ The model could be applied for re-scoring the AutoDock Vina results.
 
 <img src="./datasets/TOC_OnionNet.png" alt="DNN aided protein-ligand binding affinity prediction and docking rescoring">
 
-# Contact
-Yuguang Mu, Nanyang Technological University, ygmu_AT_ntu.edu.sg
-Liangzhen Zheng, Nanyang Technological University, lzheng002_AT_e.ntu.edu.sg
+
+## Contact
+<p>Yuguang Mu, Nanyang Technological University, ygmu_AT_ntu.edu.sg</p>
+<p>Liangzhen Zheng, Nanyang Technological University, lzheng002_AT_e.ntu.edu.sg</p>
 
 
-# Citation
+## Citation
 Coming soon ... ...
 
 
-# Installation
+## Installation
 Necessary packages should be installed to run the OnionNet model.
 
 Dependecies:
@@ -41,10 +42,11 @@ To install necessary environment, create a new env with conda commands
     
     # do some tests now
     python generate_features.py -h
+    python predict_pKa.py -h
 
 
-# Usage
-## 1. Prepare the protein-ligand complexes (3D structures) in pdb format
+## Usage
+### 1. Prepare the protein-ligand complexes (3D structures) in pdb format
     
     a. The protein-ligand complexes from experimental crystal or NMR structures, or from molecular
        docking, are accepted.
@@ -52,7 +54,7 @@ To install necessary environment, create a new env with conda commands
     c. Generate an file containing the complexes, one complex per line. Each line contains the 
        path of the protein-ligand complex file.
 
-## 2. Generate multiple-layer inter-molecular contact features
+### 2. Generate multiple-layer inter-molecular contact features
 Using the "generate_features.py" script to generate the features for OnionNet predictions.
  
     python generate_features.py -h
@@ -61,7 +63,7 @@ Using the "generate_features.py" script to generate the features for OnionNet pr
     # or run the script with MPI, cpu 4 cores
     mpirun -np 4 python generate_features.py -inp input_complexes.dat -out output_features.py 
 
-## 3. Predict the pKa of the complexes
+### 3. Predict the pKa of the complexes
 Given a dataset containing the multiple-layer inter-molecular contact features, we could predict
 the binding affinities (in pKa scale). 
 
