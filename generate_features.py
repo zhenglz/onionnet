@@ -254,7 +254,8 @@ if __name__ == "__main__":
     inputs = comm.scatter(inputs_list, root=0)
 
     # defining the shell structures ... (do not change) 
-    n_cutoffs = np.linspace(0.1, 3.05, 60)
+    n_shells = 60
+    n_cutoffs = np.linspace(0.1, 3.05, n_shells)
 
     results = []
     ele_pairs =[]
@@ -274,7 +275,7 @@ if __name__ == "__main__":
 
         except:
             #r = results[-1]
-            r = ['fn', ] + list([0., ]*3840) + [0.0, ]
+            r = list([0., ]* 64 * n_shells)
             results.append(r)
             #success.append(0.)
             print("Not successful. ", fn)
