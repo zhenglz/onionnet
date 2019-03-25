@@ -18,7 +18,7 @@ Usage:
     obabel 10gs_ligand.mol2 10gs_ligand.pdb
     cat 10gs_protein.pdb 10gs_ligand.pdb > 10gs_complex.pdb
 
-#3. Generate features using generate_features.py
+## 3. Generate features using generate_features.py
 Example commands:
     
     python generate_features.py -h
