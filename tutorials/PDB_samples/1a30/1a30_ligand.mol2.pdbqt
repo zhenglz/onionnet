@@ -1,0 +1,63 @@
+REMARK  Name = 1a30 ligand
+REMARK                            x       y       z     vdW  Elec       q    Type
+REMARK                         _______ _______ _______ _____ _____    ______ ____
+ROOT
+ATOM      1  CA  ASP A  2        9.258  26.072   6.560  0.00  0.00    +0.224 C 
+ENDROOT
+BRANCH   1   3
+ATOM      2  C   GLU A  1        7.174  26.772   5.504  0.00  0.00    +0.227 C 
+ATOM      3  N   ASP A  2        7.873  25.856   6.163  0.00  0.00    -0.260 N 
+ATOM      4  H   ASP A  2        7.434  24.988   6.395  0.00  0.00    +0.189 HD
+ATOM      5  O   GLU A  1        7.624  27.887   5.218  0.00  0.00    -0.391 OA
+BRANCH   2   6
+ATOM      6  CA  GLU A  1        5.733  26.394   5.165  0.00  0.00    +0.176 C 
+BRANCH   6   7
+ATOM      7  N   GLU A  1        4.841  27.576   5.310  0.00  0.00    +0.238 N 
+ATOM      8  H1  GLU A  1        4.878  27.911   6.260  0.00  0.00    +0.202 HD
+ATOM      9  H2  GLU A  1        5.146  28.305   4.684  0.00  0.00    +0.202 HD
+ATOM     10  H3  GLU A  1        3.895  27.313   5.084  0.00  0.00    +0.202 HD
+ENDBRANCH   6   7
+BRANCH   6  11
+ATOM     11  CB  GLU A  1        5.638  25.818   3.750  0.00  0.00    +0.092 C 
+BRANCH  11  12
+ATOM     12  CG  GLU A  1        5.827  26.846   2.652  0.00  0.00    +0.094 C 
+BRANCH  12  13
+ATOM     13  CD  GLU A  1        5.625  26.275   1.262  0.00  0.00    +0.035 C 
+ATOM     14  OE2 GLU A  1        6.425  26.620   0.363  0.00  0.00    -0.569 OA
+ATOM     15  OE1 GLU A  1        4.663  25.497   1.065  0.00  0.00    -0.569 OA
+ENDBRANCH  12  13
+ENDBRANCH  11  12
+ENDBRANCH   6  11
+ENDBRANCH   2   6
+ENDBRANCH   1   3
+BRANCH   1  16
+ATOM     16  C   ASP A  2       10.101  24.918   6.047  0.00  0.00    +0.205 C 
+ATOM     17  N   LEU A  3       10.686  25.115   4.869  0.00  0.00    -0.269 N 
+ATOM     18  H   LEU A  3       10.564  25.995   4.410  0.00  0.00    +0.188 HD
+ATOM     19  O   ASP A  2       10.182  23.864   6.682  0.00  0.00    -0.394 OA
+BRANCH  17  20
+ATOM     20  CA  LEU A  3       11.498  24.093   4.226  0.00  0.00    +0.167 C 
+BRANCH  20  21
+ATOM     21  C   LEU A  3       12.984  24.399   4.268  0.00  0.00    +0.060 C 
+ATOM     22  OXT LEU A  3       13.784  23.442   4.192  0.00  0.00    -0.567 OA
+ATOM     23  O   LEU A  3       13.334  25.592   4.378  0.00  0.00    -0.567 OA
+ENDBRANCH  20  21
+BRANCH  20  24
+ATOM     24  CB  LEU A  3       11.038  23.922   2.785  0.00  0.00    +0.046 C 
+BRANCH  24  25
+ATOM     25  CG  LEU A  3        9.583  23.466   2.770  0.00  0.00    -0.013 C 
+ATOM     26  CD2 LEU A  3        8.819  24.197   1.708  0.00  0.00    +0.007 C 
+ATOM     27  CD1 LEU A  3        9.521  21.955   2.602  0.00  0.00    +0.007 C 
+ENDBRANCH  24  25
+ENDBRANCH  20  24
+ENDBRANCH  17  20
+ENDBRANCH   1  16
+BRANCH   1  28
+ATOM     28  CB  ASP A  2        9.346  26.196   8.079  0.00  0.00    +0.136 C 
+BRANCH  28  29
+ATOM     29  CG  ASP A  2        8.649  27.441   8.588  0.00  0.00    +0.039 C 
+ATOM     30  OD2 ASP A  2        7.474  27.357   9.012  0.00  0.00    -0.569 OA
+ATOM     31  OD1 ASP A  2        9.270  28.518   8.521  0.00  0.00    -0.569 OA
+ENDBRANCH  28  29
+ENDBRANCH   1  28
+TORSDOF 13
