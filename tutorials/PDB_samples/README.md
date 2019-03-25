@@ -1,4 +1,5 @@
-#Generate features for PDB or docked protein-ligand complex. 
+# Generate features for PDB or docked protein-ligand complex. 
+
 For each complex file, just place the file path into the input 
 file ("input_docked_complexes.dat"), one file per line.
 
@@ -7,6 +8,7 @@ Otherwise, error massage or wrong features would generate.
 
 You could use ligandnamechanger.py to change the ligand name.
 Usage:
+
     python ligandnamechanger.py 10gs_vinaout_1.pdb 10gs_vinaout_1_renamed.pdb
 
 ## 2. Cat the receptor pdb and the ligand pdb
@@ -18,6 +20,7 @@ Usage:
 
 #3. Generate features using generate_features.py
 Example commands:
+    
     python generate_features.py -h
     python generate_features.py -inp input_PDB_testing.dat -out PDB_testing_features.csv
     python generate_features.py -inp input_docked_complexes.dat -out docking_complexes_features.csv
