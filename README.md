@@ -37,7 +37,7 @@ To install necessary environment, create a new env with conda commands
     cd onionnet
 
     # create a new pearsonal conda environment
-    conda env create -f onionnet_environment.yml 
+    conda env create -f onionnet_environments.yml 
     conda activate onionnet
     
     # do some tests now

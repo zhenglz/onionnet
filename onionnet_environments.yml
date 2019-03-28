@@ -1,4 +1,4 @@
-name: deeplearn
+name: onionnet
 channels:
   - omnia
   - rdkit
@@ -81,8 +81,6 @@ dependencies:
   - jedi=0.13.2=py36_1000
   - jpeg=9c=h470a237_1
   - jsonschema=3.0.0a3=py36_1000
-  - jupyter_client=5.2.4=py_0
-  - jupyter_core=4.4.0=py_0
   - kiwisolver=1.0.1=py36h2d50403_2
   - libffi=3.2.1=hfc679d8_5
   - libgfortran=3.0.0=1
