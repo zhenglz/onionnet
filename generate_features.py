@@ -87,7 +87,7 @@ class AtomTypeCounts(object):
         top = self.pdb.topology
 
         self.receptor_indices = top.select(rec_sele)
-        self.ligand_indices = top.select("resname "+lig_sele)
+        self.ligand_indices = top.select("resname " + lig_sele)
 
         table, bond = top.to_dataframe()
 
@@ -139,9 +139,18 @@ class AtomTypeCounts(object):
         return self
 
 
+def get_elementtype(e):
+    all_elements = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
+    if e in all_elements:
+        return e
+    elif e in ['Br', 'Cl', 'F']:
+        return "HAX"
+    else:
+        return "DU"
+
+
 def generate_features(complex_fn, lig_code, ncutoffs):
 
-    all_elements = ["H", "C", "O", "N", "P", "S", "Br", "Du"]
     keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
 
     # parse the pdb file and get the atom element information
@@ -149,8 +158,8 @@ def generate_features(complex_fn, lig_code, ncutoffs):
     cplx.parsePDB(rec_sele="protein", lig_sele="resname %s" % lig_code)
 
     # element types of all atoms in the proteins and ligands
-    new_lig = [x if x in all_elements else "Du" for x in cplx.lig_ele]
-    new_rec = [x if x in all_elements else "Du" for x in cplx.rec_ele]
+    new_lig = list(map(get_elementtype, cplx.lig_ele))
+    new_rec = list(map(get_elementtype, cplx.rec_ele))
 
     # the element-type combinations for all atom-atom pairs
     rec_lig_element_combines = ["_".join(x) for x in list(itertools.product(new_rec, new_lig))]
@@ -171,7 +180,7 @@ def generate_features(complex_fn, lig_code, ncutoffs):
     results = []
 
     for n in range(len(ncutoffs)):
-        #count_dict = dict.fromkeys(keys, 0.0)
+        # count_dict = dict.fromkeys(keys, 0.0)
         d = OrderedDict()
         d = d.fromkeys(keys, 0.0)
         # now sort the atom-pairs and accumulate the element-type to a dict
@@ -194,7 +203,7 @@ if __name__ == "__main__":
     Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
     Citation: Coming soon ... ...
     Author: Liangzhen Zheng
-    
+
     This script is used to generate inter-molecular element-type specific 
     contact features. Installation instructions should be refered to 
     https://github.com/zhenglz/onionnet
@@ -202,13 +211,13 @@ if __name__ == "__main__":
     Examples:
     Show help information
     python generate_features.py -h
-    
+
     Run the script with one CPU core
     python generate_features.py -inp input_samples.dat -out features_samples.csv
-    
+
     Run the script with MPI 
     mpirun -np 16 python generate_features.py -inp input_samples.dat -out features_samples.csv
-    
+
     """
 
     parser = argparse.ArgumentParser(description=d, formatter_class=RawDescriptionHelpFormatter)
@@ -228,7 +237,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    all_elements = ["H", "C", "O", "N", "P", "S", "Br", "Du"]
+    all_elements = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
     keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
 
     if rank == 0:
@@ -244,43 +253,43 @@ if __name__ == "__main__":
         inputs_list = []
         aver_size = int(len(inputs) / size)
         print(size, aver_size)
-        for i in range(size-1):
-            inputs_list.append(inputs[int(i*aver_size):int((i+1)*aver_size)])
-        inputs_list.append(inputs[(size-1)*aver_size:])
+        for i in range(size - 1):
+            inputs_list.append(inputs[int(i * aver_size):int((i + 1) * aver_size)])
+        inputs_list.append(inputs[(size - 1) * aver_size:])
 
     else:
         inputs_list = None
 
     inputs = comm.scatter(inputs_list, root=0)
 
-    # defining the shell structures ... (do not change) 
+    # defining the shell structures ... (do not change)
     n_shells = 60
-    n_cutoffs = np.linspace(0.1, 3.05, n_shells)
+    n_cutoffs = np.linspace(0.1, 3.1, n_shells)
 
     results = []
-    ele_pairs =[]
-    #success = []
+    ele_pairs = []
+    # success = []
 
     # computing the features now ...
     for p in inputs:
-        fn = p
+        fn = p+"/%s_complex.pdb" % p
         lig_code = args.lig
 
         try:
             # the main function for featurization ...
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
             results.append(r)
-            #success.append(1.)
+            # success.append(1.)
             print(rank, fn)
 
         except:
-            #r = results[-1]
-            r = list([0., ]* 64 * n_shells)
+            # r = results[-1]
+            r = list([0., ] * 64 * n_shells)
             results.append(r)
-            #success.append(0.)
+            # success.append(0.)
             print("Not successful. ", fn)
 
-    # saving features to a file now ... 
+    # saving features to a file now ...
     df = pd.DataFrame(results)
     try:
         df.index = inputs
@@ -289,9 +298,9 @@ if __name__ == "__main__":
 
     col_n = []
     for i, n in enumerate(keys * len(n_cutoffs)):
-        col_n.append(n+"_"+str(i))
+        col_n.append(n + "_" + str(i))
     df.columns = col_n
-    df.to_csv("rank%d_"%rank+args.out, sep=",", float_format="%.1f", index=True)
+    df.to_csv("rank%d_" % rank + args.out, sep=",", float_format="%.1f", index=True)
 
     print(rank, "Complete calculations. ")
 
