@@ -3,7 +3,7 @@ A multiple-layer inter-molecular contact based deep neural network for protein-l
 
 The model could be applied for re-scoring the AutoDock Vina results.
 
-<img src="./datasets/TOC.tif" alt="DNN aided protein-ligand binding affinity prediction and docking rescoring">
+<img src="./datasets/TOC.png" alt="DNN aided protein-ligand binding affinity prediction and docking rescoring">
 
 
 ## Contact

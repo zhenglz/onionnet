@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import mdtraj as mt
+import math
 import itertools
 import sys
 from collections import OrderedDict
@@ -120,7 +121,39 @@ class AtomTypeCounts(object):
 
         return self
 
-    def cutoff_count(self, cutoff=0.35):
+    def switchFuction(self, x, d0=7.0, m=12, n=6):
+        """Implement a rational switch function
+        to enable a smooth transition
+        Parameters
+        ----------
+        x : float
+            the input distance value
+        d0 : float
+            the distance cutoff, it is usually 2 times of
+            the real distance cutoff
+        m : int
+            the exponential index of higher order
+        n : int
+            the exponential index of lower order
+        Returns
+        -------
+        switched_dist : float
+            the switched continuous distance
+        Notes
+        -----
+        the function is like:
+          s= [1 - (x/d0)^6] / [1 - (x/d0)^12]
+        d0 is a cutoff, should be twice larger than the distance cutoff
+        """
+        count = 0.0
+        try:
+            count = (1.0 - math.pow((x / d0), n)) / (1.0 - math.pow((x / d0), m))
+        except ZeroDivisionError:
+            print("Divide by zero, ", x, d0)
+
+        return count
+
+    def cutoff_count(self, cutoff=0.35, switch=False):
         """
         Get the atom contact matrix
 
@@ -134,6 +167,10 @@ class AtomTypeCounts(object):
         self: return an instance of itself
         """
         # get the inter-molecular atom contacts
+        if switch:
+            vect_switch = np.vectorize(self.sw)
+            self.distance_matrix_ = vect_switch(self.distance_matrix_)
+
         self.counts_ = (self.distance_matrix_ <= cutoff) * 1.0
 
         return self
