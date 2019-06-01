@@ -288,7 +288,12 @@ def distance_padding(dist, max_pairs_=1000, padding_with=0.0):
     elif dist.shape == max_pairs_:
         d = dist
     else:
-        d = dist[:max_pairs_]
+        left_size = dist.shape[0] - math.floor((dist.shape[0]- max_pairs_)/2)
+        right_size = dist.shape[0] - max_pairs_ - left_size
+
+        d = dist[left_size:-1 * right_size]
+        if d.shape != max_pairs_:
+            print("Error: feature size incorrect feature padding. ")
         print("Warning: number of features higher than %d" % max_pairs_)
 
     return d
