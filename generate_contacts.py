@@ -141,7 +141,9 @@ class ParseMolecule(Molecule):
             pos = self.molecule_.GetConformer()
             self.coordinates_ = pos.GetPositions()
         except AttributeError:
-            self.coordinates_ = self.get_mol2_xyz(self.filen)
+            print("Fall back to the stupid way to get mol2 xyz. ")
+            # in mol2 file, xyz are in angstrom, but we need nanometer
+            self.coordinates_ = self.get_mol2_xyz(self.filen) * 0.1
 
         return self.coordinates_
 
@@ -199,13 +201,13 @@ class ParseProtein(object):
         distance_matrix_ = mt.compute_distances(self.pdb, atom_pairs=pairs_)[0]
         distance_matrix_ = distance_matrix_.reshape((-1, c_alpha_indices.shape[0]))
 
-        cmap = (distance_matrix_ <= cutoff)*1.0
+        cmap = (distance_matrix_ <= cutoff) * 1.0
 
         return cmap
 
     def cal_distances(self, point_pair):
 
-        return np.sqrt(np.sum(point_pair[0] - point_pair[1]))
+        return np.sqrt(np.sum(np.square(point_pair[0] - point_pair[1])))
 
     def contacts_nbyn(self, cutoff, crds_p, crds_l, nbyn=True):
         """
@@ -240,6 +242,7 @@ class ParseProtein(object):
 
     def distances_all_pairs(self, lig_xyz, cutoff, verbose=True):
         # looping over all pairs
+        # mdtraj use nanometer
         d = np.zeros(self.n_residues)
 
         for i, p in enumerate(range(self.n_residues)):
