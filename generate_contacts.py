@@ -140,8 +140,8 @@ class ParseMolecule(Molecule):
         try:
             pos = self.molecule_.GetConformer()
             self.coordinates_ = pos.GetPositions()
-        except:
-
+        except AttributeError:
+            self.coordinates_ = self.get_mol2_xyz(self.filen)
 
         return self.coordinates_
 
