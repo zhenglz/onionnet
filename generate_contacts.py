@@ -285,16 +285,16 @@ def distance_padding(dist, max_pairs_=1000, padding_with=0.0):
 
         d = np.concatenate((d, np.repeat(padding_with, right_size)))
 
-    elif dist.shape == max_pairs_:
+    elif dist.shape[0] == max_pairs_:
         d = dist
 
-    elif dist.shape[0] > max_pairs_:
+    else:
         left_size = dist.shape[0] - math.floor((dist.shape[0]- max_pairs_)/2)
         right_size = dist.shape[0] - max_pairs_ - left_size
 
-        d = dist[left_size:-1 * right_size]
+        d = np.array(list(dist)[left_size:-1 * right_size])
 
-        if d.shape != max_pairs_:
+        if d.shape[0] != max_pairs_:
             print("Error: feature size incorrect feature padding. ", d.shape, max_pairs_)
         print("Warning: number of features higher than %d" % max_pairs_)
 
