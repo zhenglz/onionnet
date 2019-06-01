@@ -117,7 +117,7 @@ class ParseMolecule(Molecule):
                 elif "@<TRIPOS>BOND" in s:
                     condition = False
 
-                elif condition and len(s.split()) > 5:
+                elif condition and len(s.split()) > 5 and "H" != s.split()[5].split(".")[0]:
                     xyz.append([float(s.split()[x]) for x in [2, 3, 4]])
 
                 else:
@@ -144,6 +144,7 @@ class ParseMolecule(Molecule):
             print("Fall back to the stupid way to get mol2 xyz. ")
             # in mol2 file, xyz are in angstrom, but we need nanometer
             self.coordinates_ = self.get_mol2_xyz(self.filen) * 0.1
+            print(self.coordinates_)
 
         return self.coordinates_
 
@@ -155,6 +156,7 @@ class ParseProtein(object):
         pdb = mt.load_pdb(pdb_fn)
 
         self.pdb = pdb.atom_slice(pdb.topology.select("protein"))
+
         self.top = self.pdb.topology
         self.seq = ""
 
@@ -196,6 +198,7 @@ class ParseProtein(object):
         # define pairs
         c_alpha_indices = self.top.select("name CA")
         print("Number of Calpha atoms ", c_alpha_indices.shape)
+
         pairs_ = list(itertools.product(c_alpha_indices, c_alpha_indices))
 
         distance_matrix_ = mt.compute_distances(self.pdb, atom_pairs=pairs_)[0]
@@ -292,7 +295,7 @@ def distance_padding(dist, max_pairs_=1000, padding_with=0.0):
         left_size = dist.shape[0] - math.floor((dist.shape[0]- max_pairs_)/2)
         right_size = dist.shape[0] - max_pairs_ - left_size
 
-        d = np.array(list(dist)[left_size:-1 * right_size])
+        d = dist[left_size : -1 * right_size ]
 
         if d.shape[0] != max_pairs_:
             print("Error: feature size incorrect feature padding. ", d.shape, max_pairs_)
