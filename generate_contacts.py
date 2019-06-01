@@ -76,14 +76,19 @@ class Molecule(object):
 
         self.mol_file = mol_file
 
-        if self.format not in ["mol2", "mol", "pdb", "sdf"] and\
-                not os.path.exists(self.mol_file):
+        if self.format not in ["mol2", "mol", "pdb", "sdf"]:
+            print("File format is not correct. ")
+            return None
+        elif not os.path.exists(self.mol_file):
             print("Molecule file not exists. ")
             return None
+        else:
+            try:
+                self.molecule_ = self.converter_[self.format](self.mol_file)
+            except RuntimeError:
+                return None
 
-        self.molecule_ = self.converter_[self.format](self.mol_file)
-
-        return self.molecule_
+            return self.molecule_
 
 
 class ParseMolecule(Molecule):
@@ -384,7 +389,7 @@ def generate_contact_features(protein_fn, ligand_fn,
 
     if verbose: print("START alpha-C contact map")
     r = np.array([])
-    for c in np.linspace(0.6, 1.6, 6):
+    for c in np.linspace(0.6, 1.6, 3):
         cmap = protein.contact_calpha(cutoff=c).sum(axis=0)
         cmap = distance_padding(cmap)
 
@@ -533,7 +538,7 @@ if __name__ == "__main__":
             print(rank, p)
 
         except RuntimeError:
-            r = [0., ] * 1000 * (args.n_shells + 6 + 3)
+            r = [0., ] * 1000 * (args.n_shells + 3 + 3)
             print(rank, "Not successful. ", p)
 
         results.append(r)
