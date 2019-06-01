@@ -362,7 +362,7 @@ def residue_string2code(seq, method=stringcoding):
 
 
 def generate_contact_features(protein_fn, ligand_fn,
-                              ncutoffs, verbose=True):
+                              maxseq, ncutoffs, verbose=True):
     """
     Generate features based on protein sequences.
 
@@ -398,7 +398,7 @@ def generate_contact_features(protein_fn, ligand_fn,
     r = np.array([])
     for c in np.linspace(0.6, 1.6, 3):
         cmap = protein.contact_calpha(cutoff=c).sum(axis=0)
-        cmap = distance_padding(cmap)
+        cmap = distance_padding(cmap, max_pairs_=maxseq)
 
         r = np.concatenate((r, cmap))
         #if verbose: print(cmap)
@@ -412,7 +412,7 @@ def generate_contact_features(protein_fn, ligand_fn,
             print("START sequence to coding")
 
         mapper = m()
-        coding = distance_padding(coding, padding_with=0)
+        coding = distance_padding(coding, max_pairs_=maxseq, padding_with=0)
 
         if verbose:
             print(coding)
@@ -429,7 +429,7 @@ def generate_contact_features(protein_fn, ligand_fn,
 
         counts = protein.distances_all_pairs(xyz_lig, c, verbose)
 
-        d = distance_padding(counts)
+        d = distance_padding(counts, max_pairs_=maxseq)
 
         r = np.concatenate((r, d))
 
@@ -542,12 +542,14 @@ if __name__ == "__main__":
             # the main function for featurization ...
             r = generate_contact_features(pfn, lfn,
                                           ncutoffs=n_cutoffs,
-                                          verbose=args.v)
+                                          verbose=args.v,
+                                          maxseq=args.maxseq
+                                          )
             r = list(r)
             print(rank, p)
 
         except RuntimeError:
-            r = [0., ] * 1000 * (args.n_shells + 3 + 3)
+            r = [0., ] * args.maxseq * (args.n_shells + 3 + 3)
             print(rank, "Not successful. ", p)
 
         results.append(r)
