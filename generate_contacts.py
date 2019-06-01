@@ -10,6 +10,7 @@ from mpi4py import MPI
 import argparse
 from argparse import RawDescriptionHelpFormatter
 from rdkit import Chem
+import linecache
 
 
 class Molecule(object):
@@ -96,12 +97,34 @@ class ParseMolecule(Molecule):
     def __init__(self, molfile, input_format="smile", addH=False):
         super().__init__(input_format)
 
+        self.filen = molfile
+
         if addH:
             self.molecule_ = Chem.AddHs(self.molecule_)
 
         # load mol file, or a simile string
         self.load_molecule(mol_file=molfile)
         self.coordinates_ = np.array([])
+
+    def get_mol2_xyz(self, fn):
+        xyz = []
+        condition = False
+        with open(fn) as lines:
+            for s in lines:
+                if "@<TRIPOS>ATOM" in s:
+                    condition = True
+
+                elif "@<TRIPOS>BOND" in s:
+                    condition = False
+
+                elif condition and len(s.split()) > 5:
+                    xyz.append([float(s.split()[x]) for x in [2, 3, 4]])
+
+                else:
+                    pass
+
+        return np.array(xyz)
+
 
     def get_xyz(self):
         """
@@ -114,8 +137,11 @@ class ParseMolecule(Molecule):
             ligand atoms.
         """
 
-        pos = self.molecule_.GetConformer()
-        self.coordinates_ = pos.GetPositions()
+        try:
+            pos = self.molecule_.GetConformer()
+            self.coordinates_ = pos.GetPositions()
+        except:
+
 
         return self.coordinates_
 
