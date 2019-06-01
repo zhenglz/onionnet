@@ -287,13 +287,15 @@ def distance_padding(dist, max_pairs_=1000, padding_with=0.0):
 
     elif dist.shape == max_pairs_:
         d = dist
-    else:
+
+    elif dist.shape[0] > max_pairs_:
         left_size = dist.shape[0] - math.floor((dist.shape[0]- max_pairs_)/2)
         right_size = dist.shape[0] - max_pairs_ - left_size
 
         d = dist[left_size:-1 * right_size]
+
         if d.shape != max_pairs_:
-            print("Error: feature size incorrect feature padding. ")
+            print("Error: feature size incorrect feature padding. ", d.shape, max_pairs_)
         print("Warning: number of features higher than %d" % max_pairs_)
 
     return d
@@ -426,7 +428,7 @@ def generate_contact_features(protein_fn, ligand_fn,
         with open(protein_fn+"_seq_len", "w") as tofile:
             tofile.write("%d  " % len(seq))
 
-        print("Shape XYZ", xyz_lig.shape)
+        print("Shape LIGANG XYZ", xyz_lig.shape)
 
     if verbose: print("START alpha-C contact map")
     r = np.array([])
@@ -597,7 +599,7 @@ if __name__ == "__main__":
 
     col_n = ["F"+ str(x) for x in range(df.shape[1])]
     df.columns = col_n
-    df.to_csv("rank%d_" % rank + args.out, sep=",", float_format="%.4f", index=True)
+    df.to_csv("rank%d_" % rank + args.out, sep=",", float_format="%.3f", index=True)
 
     print(rank, "Complete calculations. ")
 
