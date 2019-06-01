@@ -389,6 +389,9 @@ def generate_contact_features(protein_fn, ligand_fn,
 
     if verbose:
         print("Length of residues ", len(seq))
+        with open(protein_fn+"_seq_len", "w") as tofile:
+            tofile.write("%d  " % len(seq))
+
         print("Shape XYZ", xyz_lig.shape)
 
     if verbose: print("START alpha-C contact map")
@@ -494,6 +497,8 @@ if __name__ == "__main__":
     parser.add_argument("-v", default=1, type=int,
                         help="Input, optional. Default is 1. "
                              "Whether output detail information.")
+    parser.add_argument("-maxseq", default=500, type=int,
+                        help="Input, optional, int. Default is 500. The max length of the sequence.")
 
     args = parser.parse_args()
 
