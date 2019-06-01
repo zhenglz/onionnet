@@ -381,11 +381,15 @@ def generate_contact_features(protein_fn, ligand_fn,
     """
 
     protein = ParseProtein(protein_fn)
+    protein.get_seq()
+
     ligand  = ParseMolecule(ligand_fn, input_format=ligand_fn.split(".")[-1])
     xyz_lig = ligand.get_xyz()
-
     seq = protein.seq
-    if verbose: print("Length of residues ", len(seq))
+
+    if verbose:
+        print("Length of residues ", len(seq))
+        print("Shape XYZ", xyz_lig.shape)
 
     if verbose: print("START alpha-C contact map")
     r = np.array([])
