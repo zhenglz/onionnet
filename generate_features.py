@@ -5,11 +5,12 @@ import pandas as pd
 import mdtraj as mt
 import math
 import itertools
+import time
 import sys
 from collections import OrderedDict
-from mpi4py import MPI
 import argparse
 from argparse import RawDescriptionHelpFormatter
+import subprocess as sp
 
 
 class AtomTypeCounts(object):
@@ -68,7 +69,7 @@ class AtomTypeCounts(object):
         self.distance_matrix_ = np.array([])
         self.counts_ = np.array([])
 
-    def parsePDB(self, rec_sele="protein", lig_sele="LIG"):
+    def parsePDB(self, rec_sele="protein", lig_sele="UNK"):
         """
         Parse PDB file using mdtraj
 
@@ -177,11 +178,9 @@ class AtomTypeCounts(object):
 
 
 def get_elementtype(e):
-    all_elements = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
+    all_elements = ["H", "C", "O", "N", "P", "S", "Cl", "DU"]
     if e in all_elements:
         return e
-    elif e in ['Br', 'Cl', 'F']:
-        return "HAX"
     else:
         return "DU"
 
@@ -192,8 +191,8 @@ def generate_features(complex_fn, lig_code, ncutoffs):
 
     # parse the pdb file and get the atom element information
     cplx = AtomTypeCounts(complex_fn, lig_code)
-    cplx.parsePDB(rec_sele="protein", lig_sele="resname %s" % lig_code)
-
+    cplx.parsePDB(rec_sele="protein", lig_sele=lig_code)
+    #print(cplx.lig_ele)
     # element types of all atoms in the proteins and ligands
     new_lig = list(map(get_elementtype, cplx.lig_ele))
     new_rec = list(map(get_elementtype, cplx.rec_ele))
@@ -232,9 +231,6 @@ def generate_features(complex_fn, lig_code, ncutoffs):
 if __name__ == "__main__":
 
     print("Start Now ... ")
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    size = comm.Get_size()
 
     d = """
     Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
@@ -274,30 +270,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    all_elements = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
+    all_elements = ["H", "C", "O", "N", "P", "S", "Cl", "DU"]
     keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
 
-    if rank == 0:
-        if len(sys.argv) < 3:
-            parser.print_help()
-            sys.exit(0)
 
-        # spreading the calculating list to different MPI ranks
-        with open(args.inp) as lines:
-            lines = [x for x in lines if ("#" not in x and len(x.split()) >= 1)].copy()
-            inputs = [x.split()[0] for x in lines]
+    # spreading the calculating list to different MPI ranks
+    with open(args.inp) as lines:
+        lines = [x for x in lines if ("#" not in x and len(x.split()) >= 1)].copy()
+        inputs = [x.split()[0] for x in lines]
 
-        inputs_list = []
-        aver_size = int(len(inputs) / size)
-        print(size, aver_size)
-        for i in range(size - 1):
-            inputs_list.append(inputs[int(i * aver_size):int((i + 1) * aver_size)])
-        inputs_list.append(inputs[(size - 1) * aver_size:])
-
-    else:
-        inputs_list = None
-
-    inputs = comm.scatter(inputs_list, root=0)
 
     # defining the shell structures ... (do not change)
     n_shells = 60
@@ -308,8 +289,26 @@ if __name__ == "__main__":
     # success = []
 
     # computing the features now ...
-    for p in inputs:
-        fn = p+"/%s_complex.pdb" % p
+    l = len(inputs)
+    for i, fn in enumerate(inputs):
+        '''tofile = open('complex.pdb', 'w')
+
+        with open('receptor.pdb') as lines:
+            for s in lines :
+                if len(s.split()) and s.split()[0] == 'ATOM':
+                    tofile.write(s)
+        with open('%s/vinaout1.pdb' % p) as lines:
+            for s in lines :
+                if len(s.split()) and s.split()[0] == 'ATOM':
+                    tofile.write(s)
+        #cmd = 'cat receptor.pdb %s/vinaout1.pdb | awk \'$1 ~ /ATOM/ {print $0}\' > complex.pdb' % p
+        #job = sp.Popen(cmd, shell=True)
+        #job.communicate()
+        tofile.close()
+
+        print('Generated complex')
+
+        fn = 'complex.pdb' '''
         lig_code = args.lig
 
         try:
@@ -317,27 +316,27 @@ if __name__ == "__main__":
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
             results.append(r)
             # success.append(1.)
-            print(rank, fn)
+            print(fn, i, l)
 
-        except:
-            # r = results[-1]
+        except ValueError:
+            #r = results[-1]
             r = list([0., ] * 64 * n_shells)
             results.append(r)
             # success.append(0.)
-            print("Not successful. ", fn)
+            print("Not successful. ", fn, i, l)
 
     # saving features to a file now ...
     df = pd.DataFrame(results)
     try:
         df.index = inputs
-    except:
+    except IndexError:
         df.index = np.arange(df.shape[0])
 
     col_n = []
     for i, n in enumerate(keys * len(n_cutoffs)):
         col_n.append(n + "_" + str(i))
     df.columns = col_n
-    df.to_csv("rank%d_" % rank + args.out, sep=",", float_format="%.1f", index=True)
+    df.to_csv(args.out, sep=",", float_format="%.1f", index=True)
 
-    print(rank, "Complete calculations. ")
+    print("Calculation completed ...... ")
 
