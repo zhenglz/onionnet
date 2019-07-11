@@ -1,5 +1,6 @@
 # OnionNet
-A multiple-layer inter-molecular contact based deep neural network for protein-ligand binding affinity prediction. The testing set is CASF-2013 benchmark. The protein-ligand binding affinity is directly predicted.
+A multiple-layer inter-molecular contact based deep neural network for protein-ligand binding affinity prediction.
+The testing set is CASF-2013 benchmark and PDBbind v2016 coreset. The protein-ligand binding affinity is directly predicted.
 
 The model could be applied for re-scoring the docking results.
 
@@ -65,10 +66,7 @@ Using the "generate_features.py" script to generate the features for OnionNet pr
     python generate_features.py -h
     python generate_features.py -inp input_complexes.dat -out output_features.csv
 
-    # or run the script with MPI, cpu 4 cores
-    mpirun -np 4 python generate_features.py -inp input_complexes.dat -out output_features.py 
-
-The input file contatins the absolute or relative pathes of the protein-ligand complexes pdb files.
+The input file contains the absolute or the path of the protein-ligand complexes pdb files.
 The content of the "input_complexes.dat" file could be:
  
     ./10gs/10gs_complex.pdb

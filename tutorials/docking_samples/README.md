@@ -28,7 +28,7 @@ Example commands:
 ## 4. Make the prediction
 
     python predict_pKa.py -h
-    python predict_pKa.py -fn docking_complexes_features.csv -model ./models/OnionNet_HFree.model \
-    -scaler models/StandardScaler.model -out predicted_pka_values.csv
+    python predict_pKa.py -fn docking_complexes_features.csv -model ../../models/OnionNet_HFree.model \
+    -scaler ../../models/StandardScaler.model -out predicted_pka_values.csv
 
 Note: The larger the pka value is, the stronger it binds to a receptor.
