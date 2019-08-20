@@ -127,11 +127,11 @@ def create_model(input_size, lr=0.0001):
 
 
 if __name__ == "__main__":
-    d = """Train or predict the features based on protein-ligand complexes.
+    d = """Train or predict the pKa values based on protein-ligand complexes features.
 
     Examples:
-    python CNN_model_keras.py -fn1 docked_training_features_12ksamples_rmsd_lessthan3a.csv 
-           -fn2 training_pka_features.csv -history hist.csv -pKa_col pKa_mimic pKa -train 1
+    python train.py -fn1 docked_training_features_12ksamples_rmsd_lessthan3a.csv 
+           -fn2 training_pka_features.csv -fn_val validation_features.csv -history training_hist.csv -pKa_col pKa -train 1
 
     """
 
