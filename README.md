@@ -48,7 +48,7 @@ To install necessary environment, create a new env with conda commands
     
     # do some tests now
     python generate_features.py -h
-    python predict_pKa.py -h
+    python predict.py -h
 
 
 ## Usage
@@ -84,7 +84,8 @@ Note: make sure you only cat one receptor with one docking pose into a complex f
 ### 3. Predict the pKa of the complexes
 Given a dataset containing the multiple-layer inter-molecular contact features, we could predict
 the binding affinities (in pKa scale). 
+An example dataset file could be found in ./datasets  
 
-    python predict_pKa.py -h
+    python predict.py -h
     python predict.py -fn datasets/features_testing_v2016core_290_pka.csv -scaler models/StandardScaler.model -weights models/CNN_final_model_weights.h5 -out datasets/output_v2016_predicted.csv
 
