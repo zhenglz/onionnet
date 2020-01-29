@@ -86,6 +86,5 @@ Given a dataset containing the multiple-layer inter-molecular contact features, 
 the binding affinities (in pKa scale). 
 
     python predict_pKa.py -h
-    python predict_pKa.py -model OnionNet_HFree.model -scaler StandardScaler.model -fn features.csv -out output_predicted_pKa.csv
-
+    python predict.py -fn datasets/features_testing_v2016core_290_pka.csv -scaler models/StandardScaler.model -weights models/CNN_final_model_weights.h5 -out datasets/output_v2016_predicted.csv
 

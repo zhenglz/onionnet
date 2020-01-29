@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import tensorflow as tf
 import pandas as pd
@@ -83,6 +85,69 @@ def remove_all_hydrogens(dat, n_features):
     return df
 
 
+def create_model(input_size, lr=0.0001, maxpool=True, dropout=0.1):
+    model = tf.keras.Sequential()
+
+    model.add(tf.keras.layers.Conv2D(32, kernel_size=4, strides=1,
+                                     padding="valid", input_shape=input_size))
+    model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
+
+    model.add(tf.keras.layers.Conv2D(64, 4, 1, padding="valid"))
+    model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
+
+    model.add(tf.keras.layers.Conv2D(128, 4, 1, padding="valid"))
+    model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
+
+    model.add(tf.keras.layers.Flatten())
+
+    model.add(tf.keras.layers.Dense(400, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    model.add(tf.keras.layers.Activation("relu"))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
+
+    model.add(tf.keras.layers.Dense(200,
+                                    kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    model.add(tf.keras.layers.Activation("relu"))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
+
+    model.add(tf.keras.layers.Dense(100, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    model.add(tf.keras.layers.Activation("relu"))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
+
+    #model.add(tf.keras.layers.Dense(20, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    #model.add(tf.keras.layers.Activation("relu"))
+    #model.add(tf.keras.layers.BatchNormalization())
+    #model.add(tf.keras.layers.Dropout(dropout))
+
+    model.add(tf.keras.layers.Dense(1, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    model.add(tf.keras.layers.Activation("relu"))
+
+    sgd = tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=1e-6, )
+    model.compile(optimizer=sgd, loss=PCC_RMSE, metrics=['mse'])
+
+    return model
+
+
 if __name__ == "__main__":
     d = """Predict the features based on protein-ligand complexes.
 
@@ -103,7 +168,7 @@ if __name__ == "__main__":
                         help="Input. The docked cplx feature training set for pKa prediction.")
     parser.add_argument("-scaler", type=str, default="StandardScaler.model",
                         help="Output. The standard scaler file to save. ")
-    parser.add_argument("-model", type=str, default="DNN_Model.h5",
+    parser.add_argument("-weights", type=str, default="DNN_Model.h5",
                         help="Output. The trained DNN model file to save. ")
     parser.add_argument("-out", type=str, default="predicted_pKa.csv",
                         help="Output. The predicted pKa values file name to save. ")
@@ -139,12 +204,12 @@ if __name__ == "__main__":
     print("DataSet Loaded ... ... ")
 
     # the dataset shape 60 layers with 64 atom-type combinations
-    Xtest = Xs.values.reshape((-1, 60, 64, 1))
+    Xtest = Xs.values.reshape((-1, 64, 60, 1))
 
-    model = tf.keras.models.load_model(args.model,
-                                       custom_objects={'RMSE': RMSE,
-                                                       'PCC': PCC,
-                                                       'PCC_RMSE': PCC_RMSE})
+    # create the model
+    model = create_model((64, 60, 1), dropout=0.0, maxpool=False, lr=0.001)
+    model.load_weights(args.weights)
+
     ypred = pd.DataFrame(index=Xs.index)
     ypred['pKa_predicted'] = model.predict(Xtest).ravel()
     ypred.to_csv(args.out, header=True, index=True, float_format="%.3f", sep=',')
@@ -153,3 +218,4 @@ if __name__ == "__main__":
     if ytest is not None:
         print("PCC : %.3f" % pcc(ypred['pKa_predicted'].values, np.array(ytest)))
         print("RMSE: %.3f" % rmse(ypred['pKa_predicted'].values, np.array(ytest)))
+
