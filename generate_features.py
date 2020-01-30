@@ -5,12 +5,13 @@ import pandas as pd
 import mdtraj as mt
 import math
 import itertools
-import time
 import sys
 from collections import OrderedDict
 import argparse
 from argparse import RawDescriptionHelpFormatter
-import subprocess as sp
+
+
+ALL_ELEMENTS = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
 
 
 class AtomTypeCounts(object):
@@ -169,7 +170,7 @@ class AtomTypeCounts(object):
         """
         # get the inter-molecular atom contacts
         if switch:
-            vect_switch = np.vectorize(self.sw)
+            vect_switch = np.vectorize(self.switchFuction)
             self.distance_matrix_ = vect_switch(self.distance_matrix_)
 
         self.counts_ = (self.distance_matrix_ <= cutoff) * 1.0
@@ -178,16 +179,18 @@ class AtomTypeCounts(object):
 
 
 def get_elementtype(e):
-    all_elements = ["H", "C", "O", "N", "P", "S", "Cl", "DU"]
-    if e in all_elements:
+    #all_elements = ["H", "C", "O", "N", "P", "S", "Cl", "DU"]
+    if e in ALL_ELEMENTS:
         return e
+    elif e in ['Cl', 'Br', 'I', 'F']:
+        return 'HAX'
     else:
         return "DU"
 
 
 def generate_features(complex_fn, lig_code, ncutoffs):
 
-    keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
+    keys = ["_".join(x) for x in list(itertools.product(ALL_ELEMENTS, ALL_ELEMENTS))]
 
     # parse the pdb file and get the atom element information
     cplx = AtomTypeCounts(complex_fn, lig_code)
@@ -234,8 +237,8 @@ if __name__ == "__main__":
 
     d = """
     Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
-    Citation: Coming soon ... ...
-    Author: Liangzhen Zheng
+    Citation: Zheng L, Fan J, Mu Y. arXiv preprint arXiv:1906.02418, 2019.
+    Author: Liangzhen Zheng (zhenglz@outlook.com)
 
     This script is used to generate inter-molecular element-type specific 
     contact features. Installation instructions should be refered to 
@@ -245,11 +248,12 @@ if __name__ == "__main__":
     Show help information
     python generate_features.py -h
 
-    Run the script with one CPU core
+    Run the script 
     python generate_features.py -inp input_samples.dat -out features_samples.csv
 
-    Run the script with MPI 
-    mpirun -np 16 python generate_features.py -inp input_samples.dat -out features_samples.csv
+    # tutorial example
+    cd tuttorials/PDB_samples
+    python ../../generate_features.py -inp input_PDB_testing.dat -out PDB_testing_features.csv
 
     """
 
@@ -270,15 +274,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    all_elements = ["H", "C", "O", "N", "P", "S", "Cl", "DU"]
-    keys = ["_".join(x) for x in list(itertools.product(all_elements, all_elements))]
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(0)
 
+    keys = ["_".join(x) for x in list(itertools.product(ALL_ELEMENTS, ALL_ELEMENTS))]
 
-    # spreading the calculating list to different MPI ranks
     with open(args.inp) as lines:
         lines = [x for x in lines if ("#" not in x and len(x.split()) >= 1)].copy()
         inputs = [x.split()[0] for x in lines]
-
 
     # defining the shell structures ... (do not change)
     n_shells = 60
@@ -286,29 +290,10 @@ if __name__ == "__main__":
 
     results = []
     ele_pairs = []
-    # success = []
 
     # computing the features now ...
     l = len(inputs)
     for i, fn in enumerate(inputs):
-        '''tofile = open('complex.pdb', 'w')
-
-        with open('receptor.pdb') as lines:
-            for s in lines :
-                if len(s.split()) and s.split()[0] == 'ATOM':
-                    tofile.write(s)
-        with open('%s/vinaout1.pdb' % p) as lines:
-            for s in lines :
-                if len(s.split()) and s.split()[0] == 'ATOM':
-                    tofile.write(s)
-        #cmd = 'cat receptor.pdb %s/vinaout1.pdb | awk \'$1 ~ /ATOM/ {print $0}\' > complex.pdb' % p
-        #job = sp.Popen(cmd, shell=True)
-        #job.communicate()
-        tofile.close()
-
-        print('Generated complex')
-
-        fn = 'complex.pdb' '''
         lig_code = args.lig
 
         try:
@@ -319,10 +304,8 @@ if __name__ == "__main__":
             print(fn, i, l)
 
         except ValueError:
-            #r = results[-1]
             r = list([0., ] * 64 * n_shells)
             results.append(r)
-            # success.append(0.)
             print("Not successful. ", fn, i, l)
 
     # saving features to a file now ...
@@ -338,5 +321,5 @@ if __name__ == "__main__":
     df.columns = col_n
     df.to_csv(args.out, sep=",", float_format="%.1f", index=True)
 
-    print("Calculation completed ...... ")
+    print("Feature extraction completed ...... ")
 

@@ -89,3 +89,11 @@ An example dataset file could be found in ./datasets
     python predict.py -h
     python predict.py -fn datasets/features_testing_v2016core_290_pka.csv -scaler models/StandardScaler.model -weights models/CNN_final_model_weights.h5 -out datasets/output_v2016_predicted.csv
 
+    # tutorial example
+    cd tutorials/PDB_samples
+    # generate features
+    python ../../generate_features.py -inp input_PDB_testing.dat -out PDB_testing_features.csv
+    # predict binding affinity 
+    python ../../predict.py -fn  PDB_testing_features.csv -out predicted_pKa.csv -weights ../../models/CNN_final_model_weights.h5 -scaler ../../models/StandardScaler.model
+
+
