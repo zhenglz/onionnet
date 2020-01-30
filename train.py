@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.externals import joblib
 import argparse
-from argparse import RawTextHelpFormatter
+from argparse import RawTextHelpFormatter, RawDescriptionHelpFormatter
 import os
 from scipy import stats
 
@@ -16,12 +16,23 @@ def rmse(y_true, y_pred):
 
 
 def pcc(y_true, y_pred):
-    pcc = stats.pearsonr(y_true, y_pred)
-    return pcc[0]
+    p = stats.pearsonr(y_true, y_pred)
+    return p[0]
+
+
+def pcc_rmse(y_true, y_pred):
+    global alpha
+
+    dev = np.square(y_true.ravel() - y_pred.ravel())
+    r = np.sqrt(np.sum(dev) / y_true.shape[0])
+
+    p = stats.pearsonr(y_true, y_pred)[0]
+
+    return (1-p)*alpha + r * (1 - alpha)
 
 
 def PCC_RMSE(y_true, y_pred):
-    alpha = 0.7
+    global alpha
 
     fsp = y_pred - tf.keras.backend.mean(y_pred)
     fst = y_true - tf.keras.backend.mean(y_true)
@@ -29,13 +40,13 @@ def PCC_RMSE(y_true, y_pred):
     devP = tf.keras.backend.std(y_pred)
     devT = tf.keras.backend.std(y_true)
 
-    rmse = tf.keras.backend.sqrt(tf.keras.backend.mean(tf.keras.backend.square(y_pred - y_true), axis=-1))
+    r = tf.keras.backend.sqrt(tf.keras.backend.mean(tf.keras.backend.square(y_pred - y_true), axis=-1))
 
-    pcc = 1.0 - tf.keras.backend.mean(fsp * fst) / (devP * devT)
+    p = 1.0 - tf.keras.backend.mean(fsp * fst) / (devP * devT)
 
-    pcc = tf.where(tf.is_nan(pcc), 0.25, pcc)
+    #p = tf.where(tf.is_nan(p), 0.25, p)
 
-    return alpha * pcc + (1 - alpha) * rmse
+    return alpha * p + (1 - alpha) * r
 
 
 def RMSE(y_true, y_pred):
@@ -90,67 +101,92 @@ def remove_all_hydrogens(dat, n_features):
     return df
 
 
-def create_model(input_size, lr=0.0001):
+def create_model(input_size, lr=0.0001, maxpool=True, dropout=0.1):
     model = tf.keras.Sequential()
 
-    model.add(tf.keras.layers.Conv2D(32, 4, 1, input_shape=input_size))
+    model.add(tf.keras.layers.Conv2D(32, kernel_size=4, strides=1,
+                                     padding="valid", input_shape=input_size))
     model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
 
-    model.add(tf.keras.layers.Conv2D(64, 4, 1))
+    model.add(tf.keras.layers.Conv2D(64, 4, 1, padding="valid"))
     model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
 
-    model.add(tf.keras.layers.Conv2D(128, 4, 1))
+    model.add(tf.keras.layers.Conv2D(128, 4, 1, padding="valid"))
     model.add(tf.keras.layers.Activation("relu"))
+    if maxpool:
+        model.add(tf.keras.layers.MaxPooling2D(
+            pool_size=2,
+            strides=2,
+            padding='same',  # Padding method
+        ))
 
     model.add(tf.keras.layers.Flatten())
 
     model.add(tf.keras.layers.Dense(400, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
     model.add(tf.keras.layers.Activation("relu"))
     model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
 
     model.add(tf.keras.layers.Dense(200,
                                     kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
     model.add(tf.keras.layers.Activation("relu"))
     model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
 
     model.add(tf.keras.layers.Dense(100, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
     model.add(tf.keras.layers.Activation("relu"))
     model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Dropout(dropout))
+
+    #model.add(tf.keras.layers.Dense(20, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
+    #model.add(tf.keras.layers.Activation("relu"))
+    #model.add(tf.keras.layers.BatchNormalization())
+    #model.add(tf.keras.layers.Dropout(dropout))
 
     model.add(tf.keras.layers.Dense(1, kernel_regularizer=tf.keras.regularizers.l2(0.01), ))
     model.add(tf.keras.layers.Activation("relu"))
 
     sgd = tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=1e-6, )
-    model.compile(optimizer=sgd, loss=PCC_RMSE, metrics=["mse", PCC, RMSE])
+    model.compile(optimizer=sgd, loss=PCC_RMSE, metrics=['mse'])
 
     return model
 
 
 if __name__ == "__main__":
-    d = """Train or predict the pKa values based on protein-ligand complexes features.
+    d = """Train or predict the features based on protein-ligand complexes.
 
     Examples:
-    python train.py -fn1 docked_training_features_12ksamples_rmsd_lessthan3a.csv 
-           -fn2 training_pka_features.csv -fn_val validation_features.csv -history training_hist.csv -pKa_col pKa -train 1
+    python CNN_model_keras.py -fn1 docked_training_features_12ksamples_rmsd_lessthan3a.csv 
+           -fn2 training_pka_features.csv -history hist.csv -pKa_col pKa_mimic pKa -train 1
 
     """
 
-    parser = argparse.ArgumentParser(description=d, formatter_class=RawTextHelpFormatter)
-    parser.add_argument("-fn1", type=str, default=["features_1.csv", ], nargs="+",
-                        help="Input. The docked cplx feature set.")
-    parser.add_argument("-fn2", type=str, default=["features_2.csv", ], nargs="+",
-                        help="Input. The PDBBind feature set.")
-    parser.add_argument("-fn_val", type=str, default=["features_3.csv", ], nargs="+",
-                        help="Input. The validation feature set.")
-    parser.add_argument("-history", type=str, default="history.csv",
-                        help="Output. The history information. ")
-    parser.add_argument("-pKa_col", type=str, nargs="+", default=["pKa_relu", "pKa_true"],
+    parser = argparse.ArgumentParser(description=d, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-fn_train", type=str, default=["features_1.csv", ], nargs="+",
+                        help="Input. The docked cplx feature training set.")
+    parser.add_argument("-fn_validate", type=str, default=["features_2.csv", ], nargs="+",
+                        help="Input. The PDBBind feature validating set.")
+    parser.add_argument("-fn_test", type=str, default=["features_2.csv", ], nargs="+",
+                        help="Input. The PDBBind feature testing set.")
+    parser.add_argument("-y_col", type=str, nargs="+", default=["pKa_relu", "pKa_true"],
                         help="Input. The pKa colname as the target. ")
     parser.add_argument("-scaler", type=str, default="StandardScaler.model",
                         help="Output. The standard scaler file to save. ")
     parser.add_argument("-model", type=str, default="DNN_Model.h5",
                         help="Output. The trained DNN model file to save. ")
-    parser.add_argument("-log", type=str, default="logger.csv",
+    parser.add_argument("-log", type=str, default="",
                         help="Output. The logger file name to save. ")
     parser.add_argument("-out", type=str, default="predicted_pKa.csv",
                         help="Output. The predicted pKa values file name to save. ")
@@ -159,10 +195,21 @@ if __name__ == "__main__":
     parser.add_argument("-epochs", type=int, default=100,
                         help="Input. Default is 100. The number of epochs to train. ")
     parser.add_argument("-batch", type=int, default=128,
-                        help="Input. Default is 128. The number of batch size to train. ")
+                        help="Input. Default is 128. The batch size. ")
+    parser.add_argument("-patience", type=int, default=40,
+                        help="Input. Default is 40. The patience steps. ")
+    parser.add_argument("-delta_loss", type=float, default=0.01,
+                        help="Input. Default is 0.01. The delta loss for early stopping. ")
+    parser.add_argument("-dropout", type=float, default=0.1,
+                        help="Input. Default is 0.1. The dropout rate. ")
+    parser.add_argument("-alpha", type=float, default=0.1,
+                        help="Input. Default is 0.1. The alpha value. ")
     parser.add_argument("-train", type=int, default=1,
                         help="Input. Default is 1. Whether train or predict. \n"
                              "1: train, 0: predict. ")
+    parser.add_argument("-pooling", type=int, default=0,
+                        help="Input. Default is 0. Whether using maxpooling. \n"
+                             "1: with pooling, 0: no pooling. ")
     parser.add_argument("-n_features", default=3840, type=int,
                         help="Input. Default is 3840. Number of features in the input dataset.")
     parser.add_argument("-reshape", type=int, default=[64, 60, 1], nargs="+",
@@ -176,102 +223,142 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(0)
 
-    X, y = np.array([]), []
+    X, y = None, []
     do_eval = False
-    ytrue = []
 
-    for fn in args.fn1:
+    global alpha
+    alpha = args.alpha
+
+    for i, fn in enumerate(args.fn_train):
         if os.path.exists(fn):
-            #print(fn)
             df = pd.read_csv(fn, index_col=0, header=0).dropna()
             if args.remove_H:
                 df = remove_all_hydrogens(df, args.n_features)
 
-            print("DataFrame Shape", df.shape, fn)
-            if args.train > 0:
-                if args.pKa_col[0] in df.columns.values:
-                    y = y + list(df[args.pKa_col[0]].values)
+            print("DataFrame Shape", df.shape)
+
+            if args.train:
+                if args.y_col[0] in df.columns.values:
+                    y = y + list(df[args.y_col[0]].values)
                 else:
-                    print("No such column %s in input file. " % args.pKa_col[0])
-            if X.shape[0] == 0:
+                    print("No such column %s in input file. " % args.y_col[0])
+
+            if i == 0:
                 X = df.values[:, :args.n_features]
             else:
                 X = np.concatenate((X, df.values[:, :args.n_features]), axis=0)
 
-            if args.pKa_col[0] in df.columns.values and args.train == 0:
-                ytrue = ytrue + list(df[args.pKa_col[0]].values)
-
-                do_eval = True
-
-    for fn in args.fn2:
-        if os.path.exists(fn):
-
-            df = pd.read_csv(fn, index_col=0, header=0).dropna()
-            print("DataFrame Shape", df.shape, fn)
-
-            if args.remove_H:
-                df = remove_all_hydrogens(df, args.n_features)
-
-            X = np.concatenate((X, df.values[:, :args.n_features]), axis=0)
-            if args.train > 0:
-                y = y + list(df[args.pKa_col[-1]].values)
-
-            if args.pKa_col[-1] in df.columns.values and args.train == 0:
-                ytrue = list(ytrue) + df[args.pKa_col[1]].values
-
-                do_eval = True
-
-    col_names = ['pKa', ]
-    Xval, yval = np.array([]), []
-
-    for i, fn in enumerate(args.fn_val):
-
+    Xval, yval = None, []
+    for i, fn in enumerate(args.fn_validate):
         if os.path.exists(fn):
             df = pd.read_csv(fn, index_col=0, header=0).dropna()
             if args.remove_H:
                 df = remove_all_hydrogens(df, args.n_features)
 
-            if Xval.shape[0] == 0:
+            if i == 0:
                 Xval = df.values[:, :args.n_features]
             else:
                 Xval = np.concatenate((Xval, df.values[:, :args.n_features]), axis=0)
 
-            if args.train > 0:
-                yval = yval + list(df[col_names[i]].values)
+            if args.train:
+                yval = yval + list(df[args.y_col[-1]].values)
 
-    print(X.shape, len(y), Xval.shape, len(yval))
+    Xtest, ytest = None, []
+    for i, fn in enumerate(args.fn_test):
+        if os.path.exists(fn):
+            df = pd.read_csv(fn, index_col=0, header=0).dropna()
+            if args.remove_H:
+                df = remove_all_hydrogens(df, args.n_features)
+
+            if i == 0:
+                Xtest = df.values[:, :args.n_features]
+            else:
+                Xtest = np.concatenate((Xtest, df.values[:, :args.n_features]), axis=0)
+
+            if args.train:
+                ytest = ytest + list(df[args.y_col[-1]].values)
+
     print("DataSet Loaded")
 
     if args.train > 0:
 
+
+
         scaler = preprocessing.StandardScaler()
-        Xs = scaler.fit_transform(X)
-        Xval = scaler.fit_transform(Xval)
+        X_train_val = np.concatenate((X, Xval), axis=0)
+        scaler.fit(X_train_val)
+
         joblib.dump(scaler, args.scaler)
+
+        Xtrain = scaler.transform(X).reshape((-1, args.reshape[0],
+                                              args.reshape[1],
+                                              args.reshape[2]))
+        Xval = scaler.transform(Xval).reshape((-1, args.reshape[0],
+                                               args.reshape[1],
+                                               args.reshape[2]))
+        Xtest = scaler.transform(Xtest).reshape((-1, args.reshape[0],
+                                                 args.reshape[1],
+                                                 args.reshape[2]))
+        ytrain = np.array(y).reshape((-1, 1))
+        yval = np.array(yval).reshape((-1, 1))
+        ytest = np.array(ytest).reshape((-1, 1))
+
         print("DataSet Scaled")
 
-        #Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(Xs, y, test_size=0.2)
-        #print("Train and test split")
-        Xtrain = Xs.reshape((-1, args.reshape[0], args.reshape[1], args.reshape[2]))
-        model = create_model((args.reshape[0], args.reshape[1], args.reshape[2]), lr=args.lr_init)
+        model = create_model((args.reshape[0], args.reshape[1], args.reshape[2]),
+                             lr=args.lr_init, dropout=args.dropout, maxpool=args.pooling)
 
-        # callbacks
-        stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1,
-                                                mode='auto', )
-        logger = tf.keras.callbacks.CSVLogger(args.log, separator=',', append=False)
-        bestmodel = tf.keras.callbacks.ModelCheckpoint(filepath="bestmodel_" + args.model, verbose=1,
-                                                       save_best_only=True)
+        stopping = [[0, 999.9], ]
+        history = []
 
         # train the model
-        history = model.fit(Xtrain, y, validation_data=(Xval.reshape(-1, args.reshape[0], args.reshape[1], args.reshape[2]), yval),
-                            batch_size=args.batch, epochs=args.epochs, verbose=1, callbacks=[stop, logger, bestmodel])
+        for e in range(1, args.epochs+1):
+            model.fit(Xtrain, ytrain, validation_data=(Xval, yval),
+                      batch_size=args.batch, epochs=1, verbose=1)
 
-        model.save(args.model)
-        print("Save model. ")
+            ytrain_pred = model.predict(Xtrain).ravel()
+            loss = pcc_rmse(ytrain.ravel(), ytrain_pred)
+            pcc_train = pcc(ytrain.ravel(), ytrain_pred)
+            rmse_train = rmse(ytrain.ravel(), ytrain_pred)
 
-        # np_hist = np.array(history)
-        # np.savetxt(args.history, np_hist, delimiter=",", fmt="%.4f")
-        # print("Save history.")
+            yval_pred = model.predict(Xval).ravel()
+            loss_val = pcc_rmse(yval.ravel(), yval_pred)
+            pcc_val = pcc(yval.ravel(), yval_pred)
+            rmse_val = rmse(yval.ravel(), yval_pred)
+
+            ytest_pred = model.predict(Xtest).ravel()
+            loss_test = pcc_rmse(ytest.ravel(), ytest_pred)
+            pcc_test = pcc(ytest.ravel(), ytest_pred)
+            rmse_test = rmse(ytest.ravel(), ytest_pred)
+
+            history.append([e, loss, pcc_train, rmse_train,
+                            loss_val, pcc_val, rmse_val,
+                            loss_test, pcc_test, rmse_test])
+            hist    = pd.DataFrame(history, columns=['epoch', 'loss', 'pcc_train', 'rmse_train',
+                                                     'loss_val', 'pcc_val', 'rmse_val',
+                                                     'loss_test', 'pcc_test', 'rmse_test'])
+
+            if args.log == "":
+                log = "log_batch%d_dropout%.1f_alpha%.1f_withH%d.csv" % \
+                (args.batch, args.dropout, args.alpha, args.remove_H)
+            else:
+                log = args.log
+
+            hist.to_csv(log, header=True, index=False, sep=",", float_format="%.4f")
+            print("EPOCH:%d Loss:%.3f RMSE:%.3f PCC:%.3f LOSS_VAL:%.3f RMSE:%.3f PCC:%.3f LOSS_TEST:%.3f RMSE_TEST:%.3f PCC_TEST:%.3f"%(e, loss, rmse_train, pcc_train, loss_val, rmse_val, pcc_val, loss_test, rmse_test, pcc_test ))            
+
+            if stopping[-1][1] - loss_val >= args.delta_loss:
+                print("Model improve from %.3f to %.3f. Save model to %s."
+                      % (stopping[-1][1], loss_val, args.model))
+
+                model.save(args.model)
+                stopping.append([e, loss_val])
+            else:
+                if e - stopping[-1][0] >= args.patience:
+                    print("Get best model at epoch = %d." % stopping[-1][0])
+                    break
+                else:
+                    pass
 
     else:
         scaler = joblib.load(args.scaler)
@@ -286,10 +373,10 @@ if __name__ == "__main__":
         ypred = pd.DataFrame()
         ypred['pKa_predicted'] = model.predict(Xs).ravel()
         if do_eval:
-            print("PCC : %.3f" % pcc(ypred['pKa_predicted'].values, ytrue))
-            print("RMSE: %.3f" % rmse(ypred['pKa_predicted'].values, ytrue))
+            print("PCC : %.3f" % pcc(ypred['pKa_predicted'].values, ytest))
+            print("RMSE: %.3f" % rmse(ypred['pKa_predicted'].values, ytest))
 
-            ypred['pKa_true'] = ytrue
+            ypred['pKa_true'] = ytest
 
         ypred.to_csv(args.out, header=True, index=True, float_format="%.3f")
 
