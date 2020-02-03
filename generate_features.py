@@ -54,7 +54,7 @@ class AtomTypeCounts(object):
 
     def __init__(self, pdb_fn, lig_code):
 
-        self.pdb = mt.load(pdb_fn)
+        self.pdb = mt.load_pdb(pdb_fn)
 
         self.receptor_indices = np.array([])
         self.ligand_indices = np.array([])
@@ -195,7 +195,6 @@ def generate_features(complex_fn, lig_code, ncutoffs):
     # parse the pdb file and get the atom element information
     cplx = AtomTypeCounts(complex_fn, lig_code)
     cplx.parsePDB(rec_sele="protein", lig_sele=lig_code)
-    #print(cplx.lig_ele)
     # element types of all atoms in the proteins and ligands
     new_lig = list(map(get_elementtype, cplx.lig_ele))
     new_rec = list(map(get_elementtype, cplx.rec_ele))
@@ -283,7 +282,6 @@ if __name__ == "__main__":
     with open(args.inp) as lines:
         lines = [x for x in lines if ("#" not in x and len(x.split()) >= 1)].copy()
         inputs = [x.split()[0] for x in lines]
-
     # defining the shell structures ... (do not change)
     n_shells = 60
     n_cutoffs = np.linspace(0.1, 3.1, n_shells)
@@ -296,17 +294,17 @@ if __name__ == "__main__":
     for i, fn in enumerate(inputs):
         lig_code = args.lig
 
-        try:
+        if True:
             # the main function for featurization ...
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
             results.append(r)
             # success.append(1.)
             print(fn, i, l)
 
-        except ValueError:
-            r = list([0., ] * 64 * n_shells)
-            results.append(r)
-            print("Not successful. ", fn, i, l)
+        #except ValueError:
+            #r = list([0., ] * 64 * n_shells)
+            #results.append(r)
+            #print("Not successful. ", fn, i, l)
 
     # saving features to a file now ...
     df = pd.DataFrame(results)

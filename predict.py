@@ -151,6 +151,9 @@ def create_model(input_size, lr=0.0001, maxpool=True, dropout=0.1):
 if __name__ == "__main__":
     d = """Predict the features based on protein-ligand complexes.
 
+    Citation: Zheng L, Fan J, Mu Y. arXiv preprint arXiv:1906.02418, 2019.
+    Author: Liangzhen Zheng (zhenglz@outlook.com)
+
     Examples:
     python predict_pKa.py -fn features_ligands.csv -model ./models/OnionNet_HFree.model \
     -scaler models/StandardScaler.model -out results.csv
