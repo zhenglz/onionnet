@@ -9,6 +9,7 @@ import sys
 from collections import OrderedDict
 import argparse
 from argparse import RawDescriptionHelpFormatter
+import multiprocessing as mp
 
 
 ALL_ELEMENTS = ["H", "C", "O", "N", "P", "S", "HAX", "DU"]
@@ -230,24 +231,30 @@ def generate_features(complex_fn, lig_code, ncutoffs):
     return results, keys
 
 
+def genfeat_mp(args):
+    f, l, nc = args
+    r, e = generate_features(f, l, nc)
+    print(f)
+    return r, e
+
 if __name__ == "__main__":
 
     print("Start Now ... ")
 
     d = """
-    Predicting protein-ligand binding affinities (pKa) with OnionNet model. 
+    Predicting protein-ligand binding affinities (pKa) with OnionNet model.
     Citation: Zheng L, Fan J, Mu Y. arXiv preprint arXiv:1906.02418, 2019.
     Author: Liangzhen Zheng (zhenglz@outlook.com)
 
-    This script is used to generate inter-molecular element-type specific 
-    contact features. Installation instructions should be refered to 
+    This script is used to generate inter-molecular element-type specific
+    contact features. Installation instructions should be refered to
     https://github.com/zhenglz/onionnet
 
     Examples:
     Show help information
     python generate_features.py -h
 
-    Run the script 
+    Run the script
     python generate_features.py -inp input_samples.dat -out features_samples.csv
 
     # tutorial example
@@ -270,6 +277,8 @@ if __name__ == "__main__":
                         help="Input, optional. Default is LIG. \n"
                              "The ligand molecule residue name (code, 3 characters) in the \n"
                              "complex pdb file. ")
+    parser.add_argument("-nt", type=int, default=1, help="Input, optional. Default is 1. Use how many of cpu cores.")
+
 
     args = parser.parse_args()
 
@@ -291,20 +300,19 @@ if __name__ == "__main__":
 
     # computing the features now ...
     l = len(inputs)
-    for i, fn in enumerate(inputs):
-        lig_code = args.lig
-
-        if True:
+    lig_code = args.lig
+    if args.nt <= 1:
+        for i, fn in enumerate(inputs):
             # the main function for featurization ...
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
             results.append(r)
             # success.append(1.)
             print(fn, i, l)
-
-        #except ValueError:
-            #r = list([0., ] * 64 * n_shells)
-            #results.append(r)
-            #print("Not successful. ", fn, i, l)
+    else:
+        pool = mp.Pool(args.nt)
+        _args = list(zip(inputs, l * [lig_code,], l*[n_cutoffs]))
+        results_all = pool.map(genfeat_mp, _args)
+        results = [ x[0] for x in results_all]
 
     # saving features to a file now ...
     df = pd.DataFrame(results)
