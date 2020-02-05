@@ -34,7 +34,8 @@ Dependecies:
 To install necessary environment, create a new env with conda commands
    
     # download the package and then enter the folder
-    git clone https://github.com/zhenglz/onionnet.git
+    # Git Large File System usage: https://www.atlassian.com/git/tutorials/git-lfs   
+    git lfs clone https://github.com/zhenglz/onionnet.git
     cd onionnet
 
     # create a new pearsonal conda environment
