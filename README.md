@@ -97,4 +97,23 @@ An example dataset file could be found in ./datasets
     # predict binding affinities 
     python ../../predict.py -fn  PDB_testing_features.csv -out predicted_pKa.csv -weights ../../models/CNN_final_model_weights.h5 -scaler ../../models/StandardScaler.model
 
+### 4. FAQ
+#### a. "ValueError: PDB Error: All MODELs must contain the same number of ATOMs"
+This issue comes from the fact that in the PDB parsing process, the ligand atoms have not been correctly identified. The PDB parsing process trys to extract the xyz coordinates and element information from both the receptor (generally a protein) and the ligand. 
+A package (mdtraj) is used to perform the parsing, based on the key words: protein (for receptor) and LIG (for ligand). 
+Thus you should make sure that the residue name (in lines starting with ATOM, col 18-20) of the ligand atoms in a PDB file is LIG (default). To achieve this, you may use a shell script prepare_complex.pdb (in tools/) to do this.  
 
+example: 
+bash prepare_complex.pdb 10gs_protein.pdb 10gs_ligand.mol2.pdb 10gs_complex.pdb
+
+#### b. How to convert ligand file to PDB format?
+You could use openbabel for the format converting. Openbabel could automately convert the molecule into your desired format based on the extension of your output file name. You may use conda to install openbabel:
+
+```
+# install
+conda install -c openbabel openbabel
+# usage example
+obabel 10gs_ligand.mol2 -O 10gs_ligand.mol2.pdb
+# or
+obabel 10gs_ligand.mol2 -O 10gs_ligand.pdb
+```
