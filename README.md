@@ -119,7 +119,7 @@ obabel 10gs_ligand.mol2 -O 10gs_ligand.pdb
 ```
 
 #### c. The downloaded CNN model file size seems not correct?
-Github has restrictions for single-large size file, and band-width usage. Thus, from time to time, the CNN model file in models/ folder could not be correctly downloaded, and I couldn't find a good solution to this issue yet. Please delete the file manually, and then donwload the CNN model file from the following onedrive link:
+Github has restrictions for single-large size file, and band-width usage. Thus, from time to time, the CNN model file in models/ folder could not be correctly downloaded, and I couldn't find a good solution to this issue yet. Please delete the file manually, and then donwload the CNN model file (around 550MB) from the following onedrive link:
 ```
 https://1drv.ms/u/s!AnZwr0kem0zN3A2MBLSkxI1Y9aaL?e=2k9UYh
 ```
