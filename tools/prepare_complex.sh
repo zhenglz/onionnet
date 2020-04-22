@@ -16,14 +16,25 @@ if [ $# -ne 3 ]; then
     exit 0;
 fi
 
+if [ ! -f ~/bin/ligandnamechanger.py ] || [ ! -f ligandnamechanger.py ]; then
+    echo "Error! No such file ligandnamechanger.py in PWD or ~/bin/; exit now !!!"
+    exit 1;
+fi
+
 # receptor
 rec=$1
 lig=$2
 out=$3
 
 # 1. change ligand name for ligand first
-ligandnamechanger.py $lig ${lig}_temp.pdb
+if [ -f ligandnamechanger.py ]; then
+    python ligandnamechanger.py $lig ${lig}_temp.pdb
+else
+    python ~/bin/ligandnamechanger.py $lig ${lig}_temp.pdb
+fi
 
 # 2. concatenate the receptor and ligand
 cat $rec ${lig}_temp.pdb | awk '$1 ~ /ATOM/ || $1 ~ /HETATM/ {print $0}' > $out
 
+# 3. do the clean-up
+rm -f ${lig}_temp.pdb
