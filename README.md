@@ -104,7 +104,7 @@ A package (mdtraj) is used to perform the parsing, based on the key words: prote
 Thus you should make sure that the residue name (in lines starting with ATOM, col 18-20) of the ligand atoms in a PDB file is LIG (default). To achieve this, you may use a shell script prepare_complex.pdb (in tools/) to do this, or use a text editor.  
 
 example: 
-```bash prepare_complex.pdb 10gs_protein.pdb 10gs_ligand.mol2.pdb 10gs_complex.pdb```
+```bash prepare_complex.sh 10gs_protein.pdb 10gs_ligand.mol2.pdb 10gs_complex.pdb```
 
 #### b. How to convert ligand file to PDB format?
 You could use openbabel for the format converting. Openbabel could automately convert the molecule into your desired format based on the extension of your output file name. You may use conda to install openbabel:
