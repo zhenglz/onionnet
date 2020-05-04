@@ -46,6 +46,7 @@ To install necessary environment, create a new env with conda commands
     conda install -c anaconda scipy numpy pandas
     conda install tensorflow
     conda install -c omnia mdtraj
+    conda install -c openbabel openbabel
     
     # do some tests now
     python generate_features.py -h
