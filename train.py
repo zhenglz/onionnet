@@ -184,8 +184,12 @@ if __name__ == "__main__":
                         help="Input. The pKa colname as the target. ")
     parser.add_argument("-scaler", type=str, default="StandardScaler.model",
                         help="Output. The standard scaler file to save. ")
+    parser.add_argument("-prev_scaler", type=str, default="model/prev_scaler.lib", 
+                        help="Load previously trained scaler.")
     parser.add_argument("-model", type=str, default="DNN_Model.h5",
                         help="Output. The trained DNN model file to save. ")
+    parser.add_argument("-prev_model", type=str, default="model/prev_trained_model.h5", 
+                        help="Load previously trained model to fine tune the model.")
     parser.add_argument("-log", type=str, default="",
                         help="Output. The logger file name to save. ")
     parser.add_argument("-out", type=str, default="predicted_pKa.csv",
@@ -282,12 +286,13 @@ if __name__ == "__main__":
 
     if args.train > 0:
 
-
-
-        scaler = preprocessing.StandardScaler()
-        X_train_val = np.concatenate((X, Xval), axis=0)
-        scaler.fit(X_train_val)
-
+        if not os.path.exists(args.prev_scaler):
+            scaler = preprocessing.StandardScaler()
+            X_train_val = np.concatenate((X, Xval), axis=0)
+            scaler.fit(X_train_val)
+        else:
+            scaler = joblib.load(args.scaler)
+            
         joblib.dump(scaler, args.scaler)
 
         Xtrain = scaler.transform(X).reshape((-1, args.reshape[0],
@@ -305,8 +310,14 @@ if __name__ == "__main__":
 
         print("DataSet Scaled")
 
-        model = create_model((args.reshape[0], args.reshape[1], args.reshape[2]),
-                             lr=args.lr_init, dropout=args.dropout, maxpool=args.pooling)
+        if not os.path.exists(args.prev_model):
+            model = create_model((args.reshape[0], args.reshape[1], args.reshape[2]),
+                                 lr=args.lr_init, dropout=args.dropout, maxpool=args.pooling)
+        else:
+            model = tf.keras.models.load_model(args.model,
+                                               custom_objects={'RMSE': RMSE,
+                                                               'PCC': PCC,
+                                                               'PCC_RMSE': PCC_RMSE})
 
         stopping = [[0, 999.9], ]
         history = []
@@ -345,7 +356,8 @@ if __name__ == "__main__":
                 log = args.log
 
             hist.to_csv(log, header=True, index=False, sep=",", float_format="%.4f")
-            print("EPOCH:%d Loss:%.3f RMSE:%.3f PCC:%.3f LOSS_VAL:%.3f RMSE:%.3f PCC:%.3f LOSS_TEST:%.3f RMSE_TEST:%.3f PCC_TEST:%.3f"%(e, loss, rmse_train, pcc_train, loss_val, rmse_val, pcc_val, loss_test, rmse_test, pcc_test ))            
+            print("EPOCH:%d Loss:%.3f RMSE:%.3f PCC:%.3f LOSS_VAL:%.3f RMSE:%.3f PCC:%.3f LOSS_TEST:%.3f RMSE_TEST:%.3f PCC_TEST:%.3f"%
+                  (e, loss, rmse_train, pcc_train, loss_val, rmse_val, pcc_val, loss_test, rmse_test, pcc_test ))            
 
             if stopping[-1][1] - loss_val >= args.delta_loss:
                 print("Model improve from %.3f to %.3f. Save model to %s."
