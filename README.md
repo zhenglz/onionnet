@@ -88,7 +88,7 @@ Or:
 To generate features with protein-ligand pair with protein in PDB format and ligand in mol2 format, 
 please refer to this repo:
 
-    ```https://github.com/zhenglz/onionnet_featurize```
+    https://github.com/zhenglz/onionnet_featurize
 
 
 Note: make sure you only cat one receptor with one docking pose into a complex file.
