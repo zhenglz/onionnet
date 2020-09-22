@@ -52,6 +52,12 @@ To install necessary environment, create a new env with conda commands
     python generate_features.py -h
     python predict.py -h
 
+Or alternatively, install the packages through the environment file.
+
+    # create a new conda environment (name: onionnet)
+    conda env create -f onet_env.yaml
+    conda activate onionnet
+    
 
 ## Usage
 ### 1. Prepare the protein-ligand complexes (3D structures) in pdb format
