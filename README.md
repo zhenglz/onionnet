@@ -84,6 +84,11 @@ Or:
   
     /home/liangzhen/PDBBind_v2018/10gs/10gs_dockingpose.pdb
     /home/liangzhen/PDBBind_v2018/1a28/1a28_dockingpose.pdb
+    
+To generate features with protein-ligand pair with protein in PDB format and ligand in mol2 format, 
+please refer to this repo:
+
+    ```https://github.com/zhenglz/onionnet_featurize```
 
 
 Note: make sure you only cat one receptor with one docking pose into a complex file.
