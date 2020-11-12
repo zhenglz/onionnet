@@ -135,3 +135,6 @@ Github has restrictions for single-large size file, and band-width usage. Thus, 
 https://drive.google.com/file/d/1cwJN44TgaVBWYEEb_SGU5JBJp6WbFdM1/view?usp=sharing
 ```
 
+Or download the model file with the following command to replace the file in the model directory:
+
+    wget "https://drive.google.com/uc?export=download&id=1cwJN44TgaVBWYEEb_SGU5JBJp6WbFdM1" -O "CNN_final_model_weights.h5"
